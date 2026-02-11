@@ -34,7 +34,4 @@ hex = "0.4"
 rand = "0.8"
 urlencoding = "2.1"
 p256 = { version = "0.13", features = ["ecdh", "ecdsa", "pkcs8", "pem"] }
-p384 = { version = "0.13", features = ["ecdh", "ecdsa", "pkcs8", "pem"] }
-k256 = { version = "0.13", features = ["ecdh", "ecdsa", "pkcs8", "pem"] }
-elliptic-curve = { version = "0.13", features = ["pkcs8"] }
 
