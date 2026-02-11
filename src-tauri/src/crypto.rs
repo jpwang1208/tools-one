@@ -214,3 +214,110 @@ pub fn generate_random_key(length: usize) -> String {
     let key: Vec<u8> = (0..length).map(|_| rand::random::<u8>()).collect();
     hex::encode(key)
 }
+
+use p256::{
+    ecdh::EphemeralSecret,
+    pkcs8::{DecodePrivateKey, DecodePublicKey, EncodePrivateKey, EncodePublicKey},
+    PublicKey, SecretKey,
+};
+use sha2::Sha256;
+
+#[derive(serde::Serialize)]
+pub struct EccKeyPair {
+    public_key: String,
+    private_key: String,
+}
+
+#[tauri::command]
+pub fn generate_ecc_keypair() -> Result<EccKeyPair, String> {
+    let secret_key = SecretKey::random(&mut OsRng);
+    let public_key = secret_key.public_key();
+
+    let private_key_pem = secret_key
+        .to_pkcs8_pem(LineEnding::LF)
+        .map_err(|e| format!("导出私钥失败: {:?}", e))?;
+
+    let public_key_pem = public_key
+        .to_public_key_pem(LineEnding::LF)
+        .map_err(|e| format!("导出公钥失败: {:?}", e))?;
+
+    Ok(EccKeyPair {
+        public_key: public_key_pem.to_string(),
+        private_key: private_key_pem.to_string(),
+    })
+}
+
+fn derive_key_from_shared_secret(shared_secret: &[u8]) -> ([u8; 32], [u8; 16]) {
+    let mut hasher = Sha256::new();
+    hasher.update(shared_secret);
+    let hash = hasher.finalize();
+
+    let mut key = [0u8; 32];
+    let mut iv = [0u8; 16];
+    key.copy_from_slice(&hash[..32]);
+    iv.copy_from_slice(&hash[16..32]);
+
+    (key, iv)
+}
+
+#[tauri::command]
+pub fn ecc_encrypt(text: &str, public_key_pem: &str) -> Result<String, String> {
+    let public_key = PublicKey::from_public_key_pem(public_key_pem)
+        .map_err(|e| format!("解析公钥失败: {:?}", e))?;
+
+    let ephemeral_secret = EphemeralSecret::random(&mut OsRng);
+    let ephemeral_public = ephemeral_secret.public_key();
+
+    let shared_secret = ephemeral_secret.diffie_hellman(&public_key);
+    let (key, iv) = derive_key_from_shared_secret(shared_secret.raw_secret_bytes());
+
+    let cipher = Aes256CbcEnc::new(&key.into(), &iv.into());
+    let mut buffer = vec![0u8; text.len() + 16];
+
+    let encrypted = cipher
+        .encrypt_padded_b2b_mut::<Pkcs7>(text.as_bytes(), &mut buffer)
+        .map_err(|e| format!("加密失败: {:?}", e))?;
+
+    let ephemeral_public_bytes = ephemeral_public.to_sec1_bytes();
+    let result = format!(
+        "{}.{}",
+        STANDARD.encode(ephemeral_public_bytes.as_ref()),
+        STANDARD.encode(encrypted)
+    );
+
+    Ok(result)
+}
+
+#[tauri::command]
+pub fn ecc_decrypt(encrypted_text: &str, private_key_pem: &str) -> Result<String, String> {
+    let parts: Vec<&str> = encrypted_text.split('.').collect();
+    if parts.len() != 2 {
+        return Err("无效的加密格式".to_string());
+    }
+
+    let ephemeral_public_bytes = STANDARD
+        .decode(parts[0])
+        .map_err(|e| format!("解码临时公钥失败: {:?}", e))?;
+
+    let encrypted_data = STANDARD
+        .decode(parts[1])
+        .map_err(|e| format!("解码密文失败: {:?}", e))?;
+
+    let ephemeral_public = PublicKey::from_sec1_bytes(&ephemeral_public_bytes)
+        .map_err(|e| format!("解析临时公钥失败: {:?}", e))?;
+
+    let secret_key =
+        SecretKey::from_pkcs8_pem(private_key_pem).map_err(|e| format!("解析私钥失败: {:?}", e))?;
+
+    let shared_secret = secret_key.diffie_hellman(&ephemeral_public);
+    let (key, iv) = derive_key_from_shared_secret(shared_secret.raw_secret_bytes());
+
+    let cipher = Aes256CbcDec::new(&key.into(), &iv.into());
+    let mut buffer = vec![0u8; encrypted_data.len()];
+
+    let decrypted = cipher
+        .decrypt_padded_b2b_mut::<Pkcs7>(&encrypted_data, &mut buffer)
+        .map_err(|e| format!("解密失败: {:?}", e))?;
+
+    String::from_utf8(decrypted.to_vec()).map_err(|e| format!("UTF-8 解码失败: {:?}", e))
+}

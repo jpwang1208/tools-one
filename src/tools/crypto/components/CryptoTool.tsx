@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { invoke } from '@tauri-apps/api/core'
 import './CryptoTool.css'
 
-type TabType = 'hash' | 'encode' | 'aes' | 'rsa' | 'generator'
+type TabType = 'hash' | 'encode' | 'aes' | 'rsa' | 'ecc' | 'generator'
 
 interface KeyPair {
   public_key: string
@@ -21,6 +21,8 @@ function CryptoTool() {
   const [rsaPublicKey, setRsaPublicKey] = useState('')
   const [rsaPrivateKey, setRsaPrivateKey] = useState('')
   const [rsaKeySize, setRsaKeySize] = useState(2048)
+  const [eccPublicKey, setEccPublicKey] = useState('')
+  const [eccPrivateKey, setEccPrivateKey] = useState('')
 
   const showNotification = (message: string, type: 'success' | 'error') => {
     setNotification({ message, type })
@@ -160,6 +162,40 @@ function CryptoTool() {
     }
   }
 
+  const handleEccEncrypt = async () => {
+    if (!input || !eccPublicKey) {
+      setError('请输入内容和公钥')
+      return
+    }
+    try {
+      const result = await invoke('ecc_encrypt', {
+        text: input,
+        publicKeyPem: eccPublicKey
+      })
+      setOutput(result as string)
+      setError('')
+    } catch (e) {
+      setError(`ECC 加密失败: ${e}`)
+    }
+  }
+
+  const handleEccDecrypt = async () => {
+    if (!input || !eccPrivateKey) {
+      setError('请输入密文和私钥')
+      return
+    }
+    try {
+      const result = await invoke('ecc_decrypt', {
+        encryptedText: input,
+        privateKeyPem: eccPrivateKey
+      })
+      setOutput(result as string)
+      setError('')
+    } catch (e) {
+      setError(`ECC 解密失败: ${e}`)
+    }
+  }
+
   const generateAesKey = async () => {
     try {
       const result = await invoke('generate_aes_key')
@@ -191,6 +227,17 @@ function CryptoTool() {
     }
   }
 
+  const generateEccKeypair = async () => {
+    try {
+      const result = await invoke('generate_ecc_keypair') as KeyPair
+      setEccPublicKey(result.public_key)
+      setEccPrivateKey(result.private_key)
+      showNotification('ECC (P-256) 密钥对已生成', 'success')
+    } catch (e) {
+      setError(`生成密钥对失败: ${e}`)
+    }
+  }
+
   const generateRandomKey = async (length: number) => {
     try {
       const result = await invoke('generate_random_key', { length })
@@ -207,6 +254,7 @@ function CryptoTool() {
     { id: 'encode', name: '编码', icon: '⇄' },
     { id: 'aes', name: 'AES', icon: '🔐' },
     { id: 'rsa', name: 'RSA', icon: '🔑' },
+    { id: 'ecc', name: 'ECC', icon: '📊' },
     { id: 'generator', name: '生成器', icon: '⚙️' }
   ]
 
@@ -354,6 +402,40 @@ function CryptoTool() {
           </div>
         )}
 
+        {activeTab === 'ecc' && (
+          <div className="tab-panel">
+            <div className="panel-header">
+              <h3>ECC 加密/解密</h3>
+              <p className="panel-desc">ECC (P-256) 椭圆曲线非对称加密 (ECIES)</p>
+            </div>
+            <div className="key-areas">
+              <div className="key-area">
+                <label>公钥 (Public Key)</label>
+                <textarea
+                  value={eccPublicKey}
+                  onChange={(e) => setEccPublicKey(e.target.value)}
+                  placeholder="输入或生成公钥..."
+                  rows={6}
+                />
+              </div>
+              <div className="key-area">
+                <label>私钥 (Private Key)</label>
+                <textarea
+                  value={eccPrivateKey}
+                  onChange={(e) => setEccPrivateKey(e.target.value)}
+                  placeholder="输入或生成私钥..."
+                  rows={6}
+                />
+              </div>
+            </div>
+            <div className="rsa-controls">
+              <button onClick={generateEccKeypair} className="action-btn">生成密钥对</button>
+              <button onClick={handleEccEncrypt} className="action-btn primary">加密</button>
+              <button onClick={handleEccDecrypt} className="action-btn">解密</button>
+            </div>
+          </div>
+        )}
+
         {activeTab === 'generator' && (
           <div className="tab-panel">
             <div className="panel-header">
@@ -387,6 +469,10 @@ function CryptoTool() {
                   </select>
                   <button onClick={generateRsaKeypair} className="action-btn">生成</button>
                 </div>
+              </div>
+              <div className="generator-item">
+                <label>ECC 密钥对</label>
+                <button onClick={generateEccKeypair} className="action-btn">生成 P-256 密钥对</button>
               </div>
             </div>
           </div>

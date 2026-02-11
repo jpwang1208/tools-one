@@ -22,6 +22,9 @@ pub fn run() {
             crypto::generate_aes_iv,
             crypto::generate_rsa_keypair,
             crypto::generate_random_key,
+            crypto::ecc_encrypt,
+            crypto::ecc_decrypt,
+            crypto::generate_ecc_keypair,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
