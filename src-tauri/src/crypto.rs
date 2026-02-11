@@ -217,10 +217,10 @@ pub fn generate_random_key(length: usize) -> String {
 
 use p256::{
     ecdh::EphemeralSecret,
-    pkcs8::{DecodePrivateKey, DecodePublicKey, EncodePrivateKey, EncodePublicKey},
+    elliptic_curve::ecdh::diffie_hellman,
+    pkcs8::{DecodePublicKey, EncodePrivateKey, EncodePublicKey},
     PublicKey, SecretKey,
 };
-use sha2::Sha256;
 
 #[derive(serde::Serialize)]
 pub struct EccKeyPair {
@@ -309,7 +309,8 @@ pub fn ecc_decrypt(encrypted_text: &str, private_key_pem: &str) -> Result<String
     let secret_key =
         SecretKey::from_pkcs8_pem(private_key_pem).map_err(|e| format!("解析私钥失败: {:?}", e))?;
 
-    let shared_secret = secret_key.diffie_hellman(&ephemeral_public);
+    let shared_secret =
+        diffie_hellman(secret_key.to_nonzero_scalar(), ephemeral_public.as_affine());
     let (key, iv) = derive_key_from_shared_secret(shared_secret.raw_secret_bytes());
 
     let cipher = Aes256CbcDec::new(&key.into(), &iv.into());
