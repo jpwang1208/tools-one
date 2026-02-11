@@ -399,24 +399,201 @@
   color: #e0e0e0;
 }
 
-.toast {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  padding: 12px 20px;
-  border-radius: 6px;
-  font-size: 14px;
-  animation: slideIn 0.3s ease;
-  z-index: 1000;
+/* 加载动画 */
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #4d4d4d;
+  border-top-color: #4fc3f7;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
 }
 
-.toast.success {
-  background: #4caf50;
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.action-btn.loading {
+  position: relative;
+  color: transparent;
+}
+
+.action-btn.loading .spinner {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  margin: -10px 0 0 -10px;
+}
+
+.action-btn.loading:disabled {
+  opacity: 0.8;
+  cursor: wait;
+}
+
+/* 密码/密钥隐藏显示 */
+.toggle-visibility {
+  position: relative;
+}
+
+.toggle-btn {
+  padding: 10px 12px;
+  background: #4d4d4d;
+  border: 1px solid #5d5d5d;
+  color: #e0e0e0;
+  cursor: pointer;
+  border-radius: 6px;
+  font-size: 13px;
+  transition: all 0.2s;
+  min-width: 80px;
+  text-align: center;
+}
+
+.toggle-btn:hover {
+  background: #5d5d5d;
+}
+
+.toggle-btn.active {
+  background: #4fc3f7;
+  color: #1e1e1e;
+}
+
+/* 密钥强度指示器 */
+.key-strength {
+  margin-top: 8px;
+}
+
+.strength-bar {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.strength-segment {
+  flex: 1;
+  height: 4px;
+  background: #3d3d3d;
+  border-radius: 2px;
+  transition: background 0.3s;
+}
+
+.strength-segment.weak { background: #ef5350; }
+.strength-segment.medium { background: #ff9800; }
+.strength-segment.strong { background: #4caf50; }
+
+.strength-text {
+  font-size: 12px;
+  color: #888;
+}
+
+/* 时间戳工具样式 */
+.timestamp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.timestamp-item {
+  background: #2d2d2d;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #3d3d3d;
+}
+
+.timestamp-item label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: #888;
+}
+
+.timestamp-value {
+  font-family: 'Monaco', 'Menlo', monospace;
+  font-size: 14px;
+  color: #e0e0e0;
+  word-break: break-all;
+}
+
+.timestamp-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+/* UUID 生成器样式 */
+.uuid-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.uuid-item {
+  background: #2d2d2d;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #3d3d3d;
+}
+
+.uuid-item label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: #888;
+}
+
+.uuid-value {
+  font-family: 'Monaco', 'Menlo', monospace;
+  font-size: 14px;
+  color: #4fc3f7;
+  word-break: break-all;
+  margin-bottom: 12px;
+}
+
+/* QR 码样式 */
+.qr-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.qr-input-area {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.qr-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #2d2d2d;
+  padding: 24px;
+  border-radius: 8px;
+  border: 1px solid #3d3d3d;
+  min-height: 300px;
+}
+
+.qr-preview canvas,
+.qr-preview svg {
+  max-width: 100%;
+}
+
+.qr-download {
+  margin-top: 16px;
+}
+
+.qr-download button {
+  width: 100%;
+}
+
+/* Toast 样式扩展 */
+.toast.info {
+  background: #2196f3;
   color: white;
 }
 
-.toast.error {
-  background: #ef5350;
+.toast.warning {
+  background: #ff9800;
   color: white;
 }
 

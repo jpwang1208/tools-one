@@ -1,6 +1,6 @@
 use aes::cipher::{block_padding::Pkcs7, BlockDecryptMut, BlockEncryptMut, KeyIvInit};
 use base64::{engine::general_purpose::STANDARD, Engine as _};
-
+use hmac::{Hmac, Mac};
 use rand::rngs::OsRng;
 use rsa::{
     pkcs1::{DecodeRsaPublicKey, EncodeRsaPublicKey, LineEnding},
@@ -11,6 +11,10 @@ use sha2::{Digest, Sha256, Sha512};
 
 type Aes256CbcEnc = cbc::Encryptor<aes::Aes256>;
 type Aes256CbcDec = cbc::Decryptor<aes::Aes256>;
+
+// HMAC 类型别名
+type HmacSha256 = Hmac<Sha256>;
+type HmacSha512 = Hmac<Sha512>;
 
 #[tauri::command]
 pub fn aes_encrypt(text: &str, key: &str, iv: &str) -> Result<String, String> {
@@ -131,6 +135,28 @@ pub fn sha512_hash(text: &str) -> String {
     let mut hasher = Sha512::new();
     hasher.update(text.as_bytes());
     hex::encode(hasher.finalize())
+}
+
+#[tauri::command]
+pub fn hmac_hash(text: &str, key: &str, algorithm: &str) -> Result<String, String> {
+    let key_bytes = key.as_bytes();
+    match algorithm {
+        "sha256" => {
+            let mut mac = HmacSha256::new_from_slice(key_bytes)
+                .map_err(|e| format!("创建 HMAC 密钥失败: {:?}", e))?;
+            mac.update(text.as_bytes());
+            let result = mac.finalize();
+            Ok(hex::encode(result.into_bytes()))
+        }
+        "sha512" => {
+            let mut mac = HmacSha512::new_from_slice(key_bytes)
+                .map_err(|e| format!("创建 HMAC 密钥失败: {:?}", e))?;
+            mac.update(text.as_bytes());
+            let result = mac.finalize();
+            Ok(hex::encode(result.into_bytes()))
+        }
+        _ => Err(format!("不支持的算法: {}", algorithm)),
+    }
 }
 
 #[tauri::command]

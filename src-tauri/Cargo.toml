@@ -1,6 +1,6 @@
 [package]
 name = "tools-one"
-version = "1.0.4"
+version = "1.1.0"
 description = "A Tauri App"
 authors = ["you"]
 edition = "2021"
@@ -28,6 +28,7 @@ cbc = { version = "0.1", features = ["alloc"] }
 cipher = "0.4"
 rsa = "0.9"
 sha2 = "0.10"
+hmac = "0.12"
 md5 = "0.7"
 base64 = "0.21"
 hex = "0.4"

@@ -12,6 +12,7 @@ pub fn run() {
             crypto::md5_hash,
             crypto::sha256_hash,
             crypto::sha512_hash,
+            crypto::hmac_hash,
             crypto::base64_encode,
             crypto::base64_decode,
             crypto::hex_encode,

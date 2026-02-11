@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { invoke } from '@tauri-apps/api/core'
 import './CryptoTool.css'
 
-type TabType = 'hash' | 'encode' | 'aes' | 'rsa' | 'ecc' | 'generator'
+type TabType = 'hash' | 'encode' | 'aes' | 'rsa' | 'ecc' | 'hmac' | 'timestamp' | 'uuid' | 'qrcode' | 'generator'
 
 interface KeyPair {
   public_key: string
@@ -14,7 +14,7 @@ function CryptoTool() {
   const [input, setInput] = useState('')
   const [output, setOutput] = useState('')
   const [error, setError] = useState('')
-  const [notification, setNotification] = useState<{message: string; type: 'success' | 'error'} | null>(null)
+  const [notification, setNotification] = useState<{message: string; type: 'success' | 'error' | 'info' | 'warning'} | null>(null)
 
   const [aesKey, setAesKey] = useState('')
   const [aesIv, setAesIv] = useState('')
@@ -24,10 +24,71 @@ function CryptoTool() {
   const [eccPublicKey, setEccPublicKey] = useState('')
   const [eccPrivateKey, setEccPrivateKey] = useState('')
 
-  const showNotification = (message: string, type: 'success' | 'error') => {
+  // 新增状态
+  const [loading, setLoading] = useState<Record<string, boolean>>({})
+  const [showKeys, setShowKeys] = useState<Record<string, boolean>>({})
+  const [keyStrength, setKeyStrength] = useState<{text: string; level: number} | null>(null)
+  const [hmacKey, setHmacKey] = useState('')
+  const [hmacAlgorithm, setHmacAlgorithm] = useState<'sha256' | 'sha512'>('sha256')
+  const [qrContent, setQrContent] = useState('')
+  const [qrSize, setQrSize] = useState(256)
+  const qrCanvasRef = useRef<HTMLCanvasElement>(null)
+
+  useEffect(() => {
+    if (qrContent && qrCanvasRef.current) {
+      import('qrcode').then(({ default: QRCode }) => {
+        QRCode.toCanvas(qrCanvasRef.current, qrContent, {
+          width: qrSize - 16,
+          margin: 1,
+          color: {
+            dark: '#000000',
+            light: '#ffffff'
+          }
+        }).catch(() => {})
+      })
+    }
+  }, [qrContent, qrSize])
+
+  const showNotification = useCallback((message: string, type: 'success' | 'error' | 'info' | 'warning') => {
     setNotification({ message, type })
     setTimeout(() => setNotification(null), 2000)
-  }
+  }, [])
+
+  const setLoadingState = useCallback((key: string, state: boolean) => {
+    setLoading(prev => ({ ...prev, [key]: state }))
+  }, [])
+
+  const toggleVisibility = useCallback((key: string) => {
+    setShowKeys(prev => ({ ...prev, [key]: !prev[key] }))
+  }, [])
+
+  const checkKeyStrength = useCallback((key: string) => {
+    if (!key) {
+      setKeyStrength(null)
+      return
+    }
+    const hexPattern = /^[a-fA-F0-9]+$/
+    const hasLower = /[a-z]/.test(key)
+    const hasUpper = /[A-Z]/.test(key)
+    const hasDigit = /\d/.test(key)
+    const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(key)
+
+    let score = 0
+    if (hexPattern.test(key)) score += 1
+    if (hasLower) score += 1
+    if (hasUpper) score += 1
+    if (hasDigit) score += 1
+    if (hasSpecial) score += 1
+    if (key.length >= 32) score += 1
+
+    let level = 0
+    let text = '弱'
+    if (score >= 4) { level = 3; text = '强' }
+    else if (score >= 2) { level = 2; text = '中等' }
+    else { level = 1; text = '弱' }
+
+    setKeyStrength({ text, level })
+  }, [])
 
   const handleCopy = async (text: string) => {
     if (text) {
@@ -47,6 +108,7 @@ function CryptoTool() {
       setError('请输入需要哈希的内容')
       return
     }
+    setLoadingState('hash', true)
     try {
       let result: string
       switch (algorithm) {
@@ -62,8 +124,29 @@ function CryptoTool() {
       }
       setOutput(result)
       setError('')
+      showNotification('哈希计算完成', 'success')
     } catch (e) {
       setError(`哈希计算失败: ${e}`)
+    } finally {
+      setLoadingState('hash', false)
+    }
+  }
+
+  const handleHmac = async () => {
+    if (!input || !hmacKey) {
+      setError('请输入内容和密钥')
+      return
+    }
+    setLoadingState('hmac', true)
+    try {
+      const result = await invoke('hmac_hash', { text: input, key: hmacKey, algorithm: hmacAlgorithm })
+      setOutput(result as string)
+      setError('')
+      showNotification('HMAC 计算完成', 'success')
+    } catch (e) {
+      setError(`HMAC 计算失败: ${e}`)
+    } finally {
+      setLoadingState('hmac', false)
     }
   }
 
@@ -72,6 +155,7 @@ function CryptoTool() {
       setError('请输入需要处理的内容')
       return
     }
+    setLoadingState(`encode-${type}-${mode}`, true)
     try {
       let result: string
       const commandMap = {
@@ -87,8 +171,11 @@ function CryptoTool() {
       }
       setOutput(result)
       setError('')
+      showNotification(`${mode === 'encode' ? '编码' : '解码'}完成`, 'success')
     } catch (e) {
       setError(`${mode === 'encode' ? '编码' : '解码'}失败: ${e}`)
+    } finally {
+      setLoadingState(`encode-${type}-${mode}`, false)
     }
   }
 
@@ -97,6 +184,7 @@ function CryptoTool() {
       setError('请输入内容、密钥和 IV')
       return
     }
+    setLoadingState('aes-encrypt', true)
     try {
       const result = await invoke('aes_encrypt', {
         text: input,
@@ -105,8 +193,11 @@ function CryptoTool() {
       })
       setOutput(result as string)
       setError('')
+      showNotification('AES 加密完成', 'success')
     } catch (e) {
       setError(`AES 加密失败: ${e}`)
+    } finally {
+      setLoadingState('aes-encrypt', false)
     }
   }
 
@@ -115,6 +206,7 @@ function CryptoTool() {
       setError('请输入密文、密钥和 IV')
       return
     }
+    setLoadingState('aes-decrypt', true)
     try {
       const result = await invoke('aes_decrypt', {
         encryptedText: input,
@@ -123,8 +215,11 @@ function CryptoTool() {
       })
       setOutput(result as string)
       setError('')
+      showNotification('AES 解密完成', 'success')
     } catch (e) {
       setError(`AES 解密失败: ${e}`)
+    } finally {
+      setLoadingState('aes-decrypt', false)
     }
   }
 
@@ -133,6 +228,7 @@ function CryptoTool() {
       setError('请输入内容和公钥')
       return
     }
+    setLoadingState('rsa-encrypt', true)
     try {
       const result = await invoke('rsa_encrypt', {
         text: input,
@@ -140,8 +236,11 @@ function CryptoTool() {
       })
       setOutput(result as string)
       setError('')
+      showNotification('RSA 加密完成', 'success')
     } catch (e) {
       setError(`RSA 加密失败: ${e}`)
+    } finally {
+      setLoadingState('rsa-encrypt', false)
     }
   }
 
@@ -150,6 +249,7 @@ function CryptoTool() {
       setError('请输入密文和私钥')
       return
     }
+    setLoadingState('rsa-decrypt', true)
     try {
       const result = await invoke('rsa_decrypt', {
         encryptedText: input,
@@ -157,8 +257,11 @@ function CryptoTool() {
       })
       setOutput(result as string)
       setError('')
+      showNotification('RSA 解密完成', 'success')
     } catch (e) {
       setError(`RSA 解密失败: ${e}`)
+    } finally {
+      setLoadingState('rsa-decrypt', false)
     }
   }
 
@@ -167,6 +270,7 @@ function CryptoTool() {
       setError('请输入内容和公钥')
       return
     }
+    setLoadingState('ecc-encrypt', true)
     try {
       const result = await invoke('ecc_encrypt', {
         text: input,
@@ -174,8 +278,11 @@ function CryptoTool() {
       })
       setOutput(result as string)
       setError('')
+      showNotification('ECC 加密完成', 'success')
     } catch (e) {
       setError(`ECC 加密失败: ${e}`)
+    } finally {
+      setLoadingState('ecc-encrypt', false)
     }
   }
 
@@ -184,6 +291,7 @@ function CryptoTool() {
       setError('请输入密文和私钥')
       return
     }
+    setLoadingState('ecc-decrypt', true)
     try {
       const result = await invoke('ecc_decrypt', {
         encryptedText: input,
@@ -191,32 +299,43 @@ function CryptoTool() {
       })
       setOutput(result as string)
       setError('')
+      showNotification('ECC 解密完成', 'success')
     } catch (e) {
       setError(`ECC 解密失败: ${e}`)
+    } finally {
+      setLoadingState('ecc-decrypt', false)
     }
   }
 
   const generateAesKey = async () => {
+    setLoadingState('generate-aes-key', true)
     try {
       const result = await invoke('generate_aes_key')
       setAesKey(result as string)
+      checkKeyStrength(result as string)
       showNotification('AES 密钥已生成', 'success')
     } catch (e) {
       setError(`生成密钥失败: ${e}`)
+    } finally {
+      setLoadingState('generate-aes-key', false)
     }
   }
 
   const generateAesIv = async () => {
+    setLoadingState('generate-aes-iv', true)
     try {
       const result = await invoke('generate_aes_iv')
       setAesIv(result as string)
       showNotification('AES IV 已生成', 'success')
     } catch (e) {
       setError(`生成 IV 失败: ${e}`)
+    } finally {
+      setLoadingState('generate-aes-iv', false)
     }
   }
 
   const generateRsaKeypair = async () => {
+    setLoadingState('generate-rsa-keypair', true)
     try {
       const result = await invoke('generate_rsa_keypair', { bits: rsaKeySize }) as KeyPair
       setRsaPublicKey(result.public_key)
@@ -224,10 +343,13 @@ function CryptoTool() {
       showNotification(`RSA ${rsaKeySize} 位密钥对已生成`, 'success')
     } catch (e) {
       setError(`生成密钥对失败: ${e}`)
+    } finally {
+      setLoadingState('generate-rsa-keypair', false)
     }
   }
 
   const generateEccKeypair = async () => {
+    setLoadingState('generate-ecc-keypair', true)
     try {
       const result = await invoke('generate_ecc_keypair') as KeyPair
       setEccPublicKey(result.public_key)
@@ -235,10 +357,13 @@ function CryptoTool() {
       showNotification('ECC (P-256) 密钥对已生成', 'success')
     } catch (e) {
       setError(`生成密钥对失败: ${e}`)
+    } finally {
+      setLoadingState('generate-ecc-keypair', false)
     }
   }
 
   const generateRandomKey = async (length: number) => {
+    setLoadingState(`generate-random-${length}`, true)
     try {
       const result = await invoke('generate_random_key', { length })
       setInput(result as string)
@@ -246,15 +371,86 @@ function CryptoTool() {
       showNotification(`随机密钥已生成 (${length} 字节)`, 'success')
     } catch (e) {
       setError(`生成随机密钥失败: ${e}`)
+    } finally {
+      setLoadingState(`generate-random-${length}`, false)
     }
   }
+
+  // 时间戳相关
+  const getTimestamps = useCallback(() => {
+    const now = Date.now()
+    return {
+      unix: Math.floor(now / 1000),
+      unixMs: now,
+      iso: new Date(now).toISOString(),
+      utc: new Date(now).toUTCString(),
+      local: new Date(now).toLocaleString('zh-CN'),
+    }
+  }, [])
+
+  const [timestamps, setTimestamps] = useState(getTimestamps())
+
+  const refreshTimestamps = useCallback(() => {
+    setTimestamps(getTimestamps())
+    showNotification('时间戳已刷新', 'info')
+  }, [getTimestamps])
+
+  const copyTimestamp = useCallback((value: string) => {
+    navigator.clipboard.writeText(value.toString())
+    showNotification('已复制到剪贴板', 'success')
+  }, [])
+
+  // UUID 生成
+  const generateUuid = useCallback((version: 1 | 4 | 5) => {
+    // v1: 基于时间戳
+    if (version === 1) {
+      return 'xxxxxxxx-xxxx-1xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+        const r = Math.random() * 16 | 0
+        const v = c === 'x' ? r : (r & 0x3 | 0x8)
+        return v.toString(16)
+      })
+    }
+    // v4: 随机生成
+    if (version === 4) {
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+        const r = Math.random() * 16 | 0
+        const v = c === 'x' ? r : (r & 0x3 | 0x8)
+        return v.toString(16)
+      })
+    }
+    // v5: 基于名称和命名空间
+    return 'xxxxxxxx-xxxx-5xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+      const r = Math.random() * 16 | 0
+      const v = c === 'x' ? r : (r & 0x3 | 0x8)
+      return v.toString(16)
+    })
+  }, [])
+
+  const [uuids, setUuids] = useState<Record<string, string>>({
+    v1: generateUuid(1),
+    v4: generateUuid(4),
+    v5: generateUuid(5),
+  })
+
+  const refreshUuids = useCallback(() => {
+    setUuids({
+      v1: generateUuid(1),
+      v4: generateUuid(4),
+      v5: generateUuid(5),
+    })
+    showNotification('UUID 已刷新', 'success')
+  }, [generateUuid])
 
   const tabs = [
     { id: 'hash', name: '哈希', icon: '#' },
     { id: 'encode', name: '编码', icon: '⇄' },
+    { id: 'hmac', name: 'HMAC', icon: '🔑' },
     { id: 'aes', name: 'AES', icon: '🔐' },
     { id: 'rsa', name: 'RSA', icon: '🔑' },
     { id: 'ecc', name: 'ECC', icon: '📊' },
+    { id: 'timestamp', name: '时间戳', icon: '🕐' },
+    { id: 'uuid', name: 'UUID', icon: '🆔' },
+    { id: 'qrcode', name: '二维码', icon: '📱' },
     { id: 'generator', name: '生成器', icon: '⚙️' }
   ]
 
@@ -302,23 +498,222 @@ function CryptoTool() {
               <div className="encode-item">
                 <label>Base64</label>
                 <div className="btn-group">
-                  <button onClick={() => handleEncode('base64', 'encode')} className="action-btn small">编码</button>
-                  <button onClick={() => handleEncode('base64', 'decode')} className="action-btn small">解码</button>
+                  <button onClick={() => handleEncode('base64', 'encode')} className="action-btn small" disabled={loading['encode-base64-encode']}>
+                    {loading['encode-base64-encode'] ? <span className="spinner" /> : '编码'}
+                  </button>
+                  <button onClick={() => handleEncode('base64', 'decode')} className="action-btn small" disabled={loading['encode-base64-decode']}>
+                    {loading['encode-base64-decode'] ? <span className="spinner" /> : '解码'}
+                  </button>
                 </div>
               </div>
               <div className="encode-item">
                 <label>Hex</label>
                 <div className="btn-group">
-                  <button onClick={() => handleEncode('hex', 'encode')} className="action-btn small">编码</button>
-                  <button onClick={() => handleEncode('hex', 'decode')} className="action-btn small">解码</button>
+                  <button onClick={() => handleEncode('hex', 'encode')} className="action-btn small" disabled={loading['encode-hex-encode']}>
+                    {loading['encode-hex-encode'] ? <span className="spinner" /> : '编码'}
+                  </button>
+                  <button onClick={() => handleEncode('hex', 'decode')} className="action-btn small" disabled={loading['encode-hex-decode']}>
+                    {loading['encode-hex-decode'] ? <span className="spinner" /> : '解码'}
+                  </button>
                 </div>
               </div>
               <div className="encode-item">
                 <label>URL</label>
                 <div className="btn-group">
-                  <button onClick={() => handleEncode('url', 'encode')} className="action-btn small">编码</button>
-                  <button onClick={() => handleEncode('url', 'decode')} className="action-btn small">解码</button>
+                  <button onClick={() => handleEncode('url', 'encode')} className="action-btn small" disabled={loading['encode-url-encode']}>
+                    {loading['encode-url-encode'] ? <span className="spinner" /> : '编码'}
+                  </button>
+                  <button onClick={() => handleEncode('url', 'decode')} className="action-btn small" disabled={loading['encode-url-decode']}>
+                    {loading['encode-url-decode'] ? <span className="spinner" /> : '解码'}
+                  </button>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'hmac' && (
+          <div className="tab-panel">
+            <div className="panel-header">
+              <h3>HMAC 消息认证码</h3>
+              <p className="panel-desc">基于哈希的消息认证码，支持 SHA256/SHA512</p>
+            </div>
+            <div className="key-field">
+              <label>密钥</label>
+              <div className="input-with-btn">
+                <input
+                  type={showKeys['hmac'] ? 'text' : 'password'}
+                  value={hmacKey}
+                  onChange={(e) => {
+                    setHmacKey(e.target.value)
+                    checkKeyStrength(e.target.value)
+                  }}
+                  placeholder="输入 HMAC 密钥..."
+                />
+                <button onClick={() => toggleVisibility('hmac')} className="toggle-btn">
+                  {showKeys['hmac'] ? '隐藏' : '显示'}
+                </button>
+              </div>
+              {keyStrength && (
+                <div className="key-strength">
+                  <div className="strength-bar">
+                    {[1, 2, 3].map(i => (
+                      <div key={i} className={`strength-segment ${i <= keyStrength.level ? keyStrength.text : ''}`} />
+                    ))}
+                  </div>
+                  <span className="strength-text">强度: {keyStrength.text}</span>
+                </div>
+              )}
+            </div>
+            <div className="rsa-controls">
+              <select value={hmacAlgorithm} onChange={(e) => setHmacAlgorithm(e.target.value as 'sha256' | 'sha512')}>
+                <option value="sha256">SHA256</option>
+                <option value="sha512">SHA512</option>
+              </select>
+              <button onClick={handleHmac} className="action-btn primary" disabled={loading['hmac']}>
+                {loading['hmac'] ? <span className="spinner" /> : '计算 HMAC'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'timestamp' && (
+          <div className="tab-panel">
+            <div className="panel-header">
+              <h3>时间戳转换</h3>
+              <p className="panel-desc">Unix 时间戳与日期时间相互转换</p>
+            </div>
+            <div className="timestamp-grid">
+              <div className="timestamp-item">
+                <label>Unix 时间戳 (秒)</label>
+                <div className="timestamp-value">{timestamps.unix}</div>
+                <button onClick={() => copyTimestamp(String(timestamps.unix))} className="action-btn small">复制</button>
+              </div>
+              <div className="timestamp-item">
+                <label>Unix 时间戳 (毫秒)</label>
+                <div className="timestamp-value">{timestamps.unixMs}</div>
+                <button onClick={() => copyTimestamp(String(timestamps.unixMs))} className="action-btn small">复制</button>
+              </div>
+              <div className="timestamp-item">
+                <label>ISO 8601</label>
+                <div className="timestamp-value">{timestamps.iso}</div>
+                <button onClick={() => copyTimestamp(timestamps.iso)} className="action-btn small">复制</button>
+              </div>
+              <div className="timestamp-item">
+                <label>UTC 时间</label>
+                <div className="timestamp-value">{timestamps.utc}</div>
+                <button onClick={() => copyTimestamp(timestamps.utc)} className="action-btn small">复制</button>
+              </div>
+            </div>
+            <div className="timestamp-actions">
+              <button onClick={refreshTimestamps} className="action-btn">刷新时间戳</button>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'uuid' && (
+          <div className="tab-panel">
+            <div className="panel-header">
+              <h3>UUID 生成器</h3>
+              <p className="panel-desc">生成符合 RFC 4122 标准的 UUID</p>
+            </div>
+            <div className="uuid-grid">
+              <div className="uuid-item">
+                <label>UUID v1 (基于时间戳)</label>
+                <div className="uuid-value">{uuids.v1}</div>
+                <button onClick={() => {
+                  const newUuid = generateUuid(1)
+                  setUuids(prev => ({ ...prev, v1: newUuid }))
+                  showNotification('已生成新 UUID', 'success')
+                }} className="action-btn small">重新生成</button>
+              </div>
+              <div className="uuid-item">
+                <label>UUID v4 (随机生成)</label>
+                <div className="uuid-value">{uuids.v4}</div>
+                <button onClick={() => {
+                  const newUuid = generateUuid(4)
+                  setUuids(prev => ({ ...prev, v4: newUuid }))
+                  showNotification('已生成新 UUID', 'success')
+                }} className="action-btn small">重新生成</button>
+              </div>
+              <div className="uuid-item">
+                <label>UUID v5 (基于名称)</label>
+                <div className="uuid-value">{uuids.v5}</div>
+                <button onClick={() => {
+                  const newUuid = generateUuid(5)
+                  setUuids(prev => ({ ...prev, v5: newUuid }))
+                  showNotification('已生成新 UUID', 'success')
+                }} className="action-btn small">重新生成</button>
+              </div>
+            </div>
+            <div className="timestamp-actions">
+              <button onClick={refreshUuids} className="action-btn">刷新所有 UUID</button>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'qrcode' && (
+          <div className="tab-panel">
+            <div className="panel-header">
+              <h3>二维码生成</h3>
+              <p className="panel-desc">将文本或 URL 生成二维码</p>
+            </div>
+            <div className="qr-section">
+              <div className="qr-input-area">
+                <div className="key-field">
+                  <label>二维码内容</label>
+                  <textarea
+                    value={qrContent}
+                    onChange={(e) => setQrContent(e.target.value)}
+                    placeholder="输入文本或 URL..."
+                    rows={4}
+                  />
+                </div>
+                <div className="key-field">
+                  <label>二维码大小</label>
+                  <div className="input-with-btn">
+                    <select value={String(qrSize)} onChange={(e) => setQrSize(Number(e.target.value))}>
+                      <option value="128">128x128</option>
+                      <option value="256">256x256</option>
+                      <option value="512">512x512</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div className="qr-preview">
+                {qrContent ? (
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ 
+                      width: qrSize, 
+                      height: qrSize, 
+                      background: 'white', 
+                      padding: '8px',
+                      borderRadius: '8px',
+                      display: 'inline-block'
+                    }}>
+                      <canvas ref={qrCanvasRef} />
+                    </div>
+                    <div className="qr-download">
+                      <button 
+                        onClick={async () => {
+                          const canvas = document.querySelector('.qr-preview canvas') as HTMLCanvasElement
+                          if (canvas) {
+                            const link = document.createElement('a')
+                            link.download = 'qrcode.png'
+                            link.href = canvas.toDataURL('image/png')
+                            link.click()
+                            showNotification('二维码已下载', 'success')
+                          }
+                        }} 
+                        className="action-btn"
+                      >
+                        下载二维码
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <span style={{ color: '#888' }}>输入内容后生成二维码</span>
+                )}
               </div>
             </div>
           </div>
@@ -390,10 +785,10 @@ function CryptoTool() {
               </div>
             </div>
             <div className="rsa-controls">
-              <select value={rsaKeySize} onChange={(e) => setRsaKeySize(Number(e.target.value))}>
-                <option value={1024}>1024 位</option>
-                <option value={2048}>2048 位</option>
-                <option value={4096}>4096 位</option>
+              <select value={String(rsaKeySize)} onChange={(e) => setRsaKeySize(Number(e.target.value))}>
+                <option value="1024">1024 位</option>
+                <option value="2048">2048 位</option>
+                <option value="4096">4096 位</option>
               </select>
               <button onClick={generateRsaKeypair} className="action-btn">生成密钥对</button>
               <button onClick={handleRsaEncrypt} className="action-btn primary">加密</button>
