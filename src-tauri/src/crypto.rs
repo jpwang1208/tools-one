@@ -218,7 +218,7 @@ pub fn generate_random_key(length: usize) -> String {
 use p256::{
     ecdh::EphemeralSecret,
     elliptic_curve::ecdh::diffie_hellman,
-    pkcs8::{DecodePublicKey, EncodePrivateKey, EncodePublicKey},
+    pkcs8::{DecodePublicKey, EncodePublicKey},
     PublicKey, SecretKey,
 };
 
