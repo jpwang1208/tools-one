@@ -1,5 +1,6 @@
 import { Tool } from '../types'
 import { useTheme } from '../context/ThemeContext'
+import { APP_VERSION, APP_NAME, APP_DESCRIPTION } from '../config/version'
 import './Sidebar.css'
 
 interface SidebarProps {
@@ -17,8 +18,8 @@ function Sidebar({ tools, activeTool, onSelectTool, collapsed, onToggleCollapse 
     <div className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
       <div className="sidebar-header">
         <div className="header-top">
-          {!collapsed && <h2>Tools One</h2>}
-          <button 
+          {!collapsed && <h2>{APP_NAME}</h2>}
+          <button
             className="collapse-btn"
             onClick={onToggleCollapse}
             title={collapsed ? '展开侧边栏' : '收起侧边栏'}
@@ -26,7 +27,7 @@ function Sidebar({ tools, activeTool, onSelectTool, collapsed, onToggleCollapse 
             <span className="collapse-icon">{collapsed ? '→' : '←'}</span>
           </button>
         </div>
-        {!collapsed && <p>开发者工具集</p>}
+        {!collapsed && <p>{APP_DESCRIPTION}</p>}
       </div>
 
       <nav className="tool-list">
@@ -59,7 +60,7 @@ function Sidebar({ tools, activeTool, onSelectTool, collapsed, onToggleCollapse 
             <span className="theme-text">{theme === 'dark' ? '浅色' : '深色'}</span>
           </button>
         )}
-        <span className="version">{collapsed ? 'v1' : 'v1.0.1'}</span>
+        <span className="version">{collapsed ? 'v1' : `v${APP_VERSION}`}</span>
       </div>
     </div>
   )
