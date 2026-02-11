@@ -2,7 +2,11 @@ use aes::cipher::{block_padding::Pkcs7, BlockDecryptMut, BlockEncryptMut, KeyIvI
 use base64::{engine::general_purpose::STANDARD, Engine as _};
 use md5::Md5;
 use rand::rngs::OsRng;
-use rsa::{Pkcs1v15Encrypt, RsaPrivateKey, RsaPublicKey};
+use rsa::{
+    pkcs1::{DecodeRsaPublicKey, EncodeRsaPublicKey, LineEnding},
+    pkcs8::{DecodePrivateKey, EncodePrivateKey},
+    Pkcs1v15Encrypt, RsaPrivateKey, RsaPublicKey,
+};
 use sha2::{Digest, Sha256, Sha512};
 
 type Aes256CbcEnc = cbc::Encryptor<aes::Aes256>;
@@ -82,7 +86,7 @@ pub fn aes_decrypt(encrypted_text: &str, key: &str, iv: &str) -> Result<String, 
 
 #[tauri::command]
 pub fn rsa_encrypt(text: &str, public_key_pem: &str) -> Result<String, String> {
-    let public_key = rsa::RsaPublicKey::from_public_key_pem(public_key_pem)
+    let public_key = RsaPublicKey::from_pkcs1_pem(public_key_pem)
         .map_err(|e| format!("解析公钥失败: {:?}", e))?;
 
     let mut rng = OsRng;
@@ -95,7 +99,7 @@ pub fn rsa_encrypt(text: &str, public_key_pem: &str) -> Result<String, String> {
 
 #[tauri::command]
 pub fn rsa_decrypt(encrypted_text: &str, private_key_pem: &str) -> Result<String, String> {
-    let private_key = rsa::RsaPrivateKey::from_pkcs8_pem(private_key_pem)
+    let private_key = RsaPrivateKey::from_pkcs8_pem(private_key_pem)
         .map_err(|e| format!("解析私钥失败: {:?}", e))?;
 
     let encrypted_data = STANDARD
@@ -193,11 +197,11 @@ pub fn generate_rsa_keypair(bits: usize) -> Result<RsaKeyPair, String> {
     let public_key = RsaPublicKey::from(&private_key);
 
     let private_key_pem = private_key
-        .to_pkcs8_pem(rsa::pkcs8::LineEnding::LF)
+        .to_pkcs8_pem(LineEnding::LF)
         .map_err(|e| format!("导出私钥失败: {:?}", e))?;
 
     let public_key_pem = public_key
-        .to_public_key_pem(rsa::pkcs1::LineEnding::LF)
+        .to_pkcs1_pem(LineEnding::LF)
         .map_err(|e| format!("导出公钥失败: {:?}", e))?;
 
     Ok(RsaKeyPair {
