@@ -59,7 +59,7 @@ function Sidebar({ tools, activeTool, onSelectTool, collapsed, onToggleCollapse 
             <span className="theme-text">{theme === 'dark' ? '浅色' : '深色'}</span>
           </button>
         )}
-        <span className="version">{collapsed ? 'v1' : 'v1.0.0'}</span>
+        <span className="version">{collapsed ? 'v1' : 'v1.0.1'}</span>
       </div>
     </div>
   )
