@@ -1,0 +1,157 @@
+.json-tree-view {
+  font-family: 'Consolas', 'Monaco', 'Courier New', 'Monaco', monospace;
+  font-size: 13px;
+  line-height: 22px;
+  padding: 8px 0;
+}
+
+.tree-row {
+  display: flex;
+  align-items: flex-start;
+  min-height: 22px;
+}
+
+.tree-indent {
+  flex-shrink: 0;
+  height: 22px;
+  display: flex;
+  justify-content: flex-end;
+  padding-right: 8px;
+  border-right: 1px solid #2d2d30;
+}
+
+.tree-content {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding-right: 8px;
+}
+
+.tree-node {
+  display: flex;
+  flex-direction: column;
+}
+
+.tree-children {
+  display: flex;
+  flex-direction: column;
+}
+
+.expand-btn {
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  margin-right: 4px;
+  background: #3c3c3c;
+  border: 1px solid #5a5a5a;
+  border-radius: 3px;
+  color: #cccccc;
+  font-size: 11px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: all 0.15s ease;
+}
+
+.expand-btn:hover {
+  background: #4c4c4c;
+  border-color: #6a6a6a;
+}
+
+.expand-btn:active {
+  background: #0e639c;
+  border-color: #1177bb;
+}
+
+.collapsed-indicator {
+  color: #64748b;
+  font-style: italic;
+  margin-right: 4px;
+}
+
+/* Key - 柔和紫罗兰色，稳重优雅 */
+.json-key {
+  color: #c084fc;
+  font-weight: normal;
+}
+
+/* String - 薄荷青绿，清新自然 */
+.json-string {
+  color: #4ade80;
+}
+
+/* Number - 天空蓝，理性冷静 */
+.json-number {
+  color: #38bdf8;
+}
+
+/* Boolean - 琥珀橙，醒目但不刺眼 */
+.json-boolean {
+  color: #fb923c;
+}
+
+/* Null - 玫瑰粉，柔和区分 */
+.json-null {
+  color: #f472b6;
+}
+
+/* Bracket - slate灰，低调衬托 */
+.json-bracket {
+  color: #94a3b8;
+}
+
+/* Colon - 浅灰 */
+.json-colon {
+  color: #64748b;
+  margin-right: 4px;
+}
+
+/* Comma - slate灰 */
+.json-comma {
+  color: #94a3b8;
+}
+
+/* Index - 天空蓝，与数字统一 */
+.json-index {
+  color: #38bdf8;
+}
+
+.tree-row:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.tree-empty {
+  color: #64748b;
+  font-style: italic;
+  padding: 12px;
+}
+
+.tree-view-with-lines {
+  display: flex;
+}
+
+.tree-line-numbers {
+  padding: 8px 10px;
+  background: var(--bg-primary);
+  border-right: 1px solid #2d2d30;
+  text-align: right;
+  user-select: none;
+  min-width: 45px;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 13px;
+  line-height: 22px;
+  color: #64748b;
+}
+
+.tree-line-num {
+  height: 22px;
+}
+
+.tree-content-area {
+  flex: 1;
+  overflow: auto;
+}

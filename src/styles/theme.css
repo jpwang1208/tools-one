@@ -1,0 +1,154 @@
+:root {
+  /* 深色主题 - 更柔和的配色 */
+  --bg-primary: #0d1117;
+  --bg-secondary: #161b22;
+  --bg-tertiary: #21262d;
+  --bg-hover: #21262d;
+  --bg-active: #1f6feb;
+  --bg-elevated: #21262d;
+  
+  --text-primary: #c9d1d9;
+  --text-secondary: #8b949e;
+  --text-muted: #6e7681;
+  --text-disabled: #484f58;
+  
+  --border-color: #30363d;
+  --border-light: #21262d;
+  
+  --accent-primary: #58a6ff;
+  --accent-hover: #79c0ff;
+  --accent-soft: rgba(88, 166, 255, 0.1);
+  
+  --error-bg: rgba(248, 81, 73, 0.1);
+  --error-text: #f85149;
+  --error-border: rgba(248, 81, 73, 0.3);
+  
+  --success-bg: rgba(35, 197, 94, 0.1);
+  --success-text: #3fb950;
+  
+  --button-bg: #21262d;
+  --button-hover: #30363d;
+  --button-active: #1f6feb;
+  
+  --input-bg: #0d1117;
+  --input-border: #30363d;
+  
+  --sidebar-bg: #161b22;
+  --sidebar-border: #30363d;
+  
+  /* 柔和的 JSON 颜色 */
+  --json-key: #7ee787;
+  --json-string: #a5d6ff;
+  --json-number: #79c0ff;
+  --json-boolean: #ff7b72;
+  --json-null: #ff7b72;
+  --json-bracket: #ffd700;
+  --json-punctuation: #ffd700;
+  --json-colon: #c9d1d9;
+  --json-comma: #c9d1d9;
+  --json-index: #79c0ff;
+  
+  /* 阴影 */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
+  
+  /* 圆角 */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+}
+
+[data-theme="light"] {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f6f8fa;
+  --bg-tertiary: #f3f4f6;
+  --bg-hover: #f3f4f6;
+  --bg-active: #0969da;
+  --bg-elevated: #ffffff;
+  
+  --text-primary: #24292f;
+  --text-secondary: #57606a;
+  --text-muted: #6e7781;
+  --text-disabled: #8c959f;
+  
+  --border-color: #d0d7de;
+  --border-light: #eaeef2;
+  
+  --accent-primary: #0969da;
+  --accent-hover: #0860ca;
+  --accent-soft: rgba(9, 105, 218, 0.1);
+  
+  --error-bg: rgba(207, 34, 46, 0.08);
+  --error-text: #cf222e;
+  --error-border: rgba(207, 34, 46, 0.3);
+  
+  --success-bg: rgba(31, 136, 61, 0.08);
+  --success-text: #1a7f37;
+  
+  --button-bg: #f6f8fa;
+  --button-hover: #f3f4f6;
+  --button-active: #0969da;
+  
+  --input-bg: #ffffff;
+  --input-border: #d0d7de;
+  
+  --sidebar-bg: #f6f8fa;
+  --sidebar-border: #d0d7de;
+  
+  --json-key: #22863a;
+  --json-string: #032f62;
+  --json-number: #005cc5;
+  --json-boolean: #d73a49;
+  --json-null: #d73a49;
+  --json-bracket: #6f42c1;
+  --json-punctuation: #6f42c1;
+  --json-colon: #24292f;
+  --json-comma: #24292f;
+  --json-index: #005cc5;
+  
+  --shadow-sm: 0 1px 2px rgba(31, 35, 40, 0.04);
+  --shadow-md: 0 3px 6px rgba(31, 35, 40, 0.08);
+  --shadow-lg: 0 8px 16px rgba(31, 35, 40, 0.12);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background 0.3s ease, color 0.3s ease;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.app {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+}
+
+.main-content {
+  flex: 1;
+  overflow: hidden;
+  background: var(--bg-primary);
+}
+
+.empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-muted);
+  font-size: 14px;
+}

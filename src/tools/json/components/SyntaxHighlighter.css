@@ -1,0 +1,52 @@
+.syntax-highlighter {
+  margin: 0;
+  padding: 12px;
+  background: transparent;
+  color: #e2e8f0;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 13px;
+  line-height: 20px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow: auto;
+  height: 100%;
+}
+
+.syntax-highlighter.empty {
+  color: #64748b;
+}
+
+/* Key - 柔和紫罗兰色，稳重优雅 */
+.json-key {
+  color: #c084fc;
+}
+
+/* String - 薄荷青绿，清新自然 */
+.json-string {
+  color: #4ade80;
+}
+
+/* Number - 天空蓝，理性冷静 */
+.json-number {
+  color: #38bdf8;
+}
+
+/* Boolean - 琥珀橙，醒目但不刺眼 */
+.json-boolean {
+  color: #fb923c;
+}
+
+/* Null - 玫瑰粉，柔和区分 */
+.json-null {
+  color: #f472b6;
+}
+
+/* Punctuation -  slate灰，低调衬托 */
+.json-punctuation {
+  color: #94a3b8;
+}
+
+/* Colon - 浅灰 */
+.json-colon {
+  color: #64748b;
+}

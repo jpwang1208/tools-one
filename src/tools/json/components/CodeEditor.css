@@ -1,0 +1,85 @@
+.code-editor {
+  flex: 1;
+  display: grid;
+  grid-template-rows: 1fr;
+  min-height: 0;
+}
+
+.code-editor-highlight {
+  margin: 0;
+  padding: 12px;
+  background: transparent;
+  color: #e2e8f0;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 13px;
+  line-height: 20px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  pointer-events: none;
+  box-sizing: border-box;
+  grid-row: 1;
+  grid-column: 1;
+  overflow: hidden;
+}
+
+.code-editor-textarea {
+  padding: 12px;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: transparent;
+  caret-color: #e2e8f0;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 13px;
+  line-height: 20px;
+  resize: none;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  box-sizing: border-box;
+  overflow: auto;
+  overflow-x: hidden;
+  grid-row: 1;
+  grid-column: 1;
+}
+
+.editor-placeholder {
+  color: #64748b;
+}
+
+/* Key - 柔和紫罗兰色，稳重优雅 */
+.editor-key {
+  color: #c084fc;
+}
+
+/* String - 薄荷青绿，清新自然 */
+.editor-string {
+  color: #4ade80;
+}
+
+/* Number - 天空蓝，理性冷静 */
+.editor-number {
+  color: #38bdf8;
+}
+
+/* Boolean - 琥珀橙，醒目但不刺眼 */
+.editor-boolean {
+  color: #fb923c;
+}
+
+/* Null - 玫瑰粉，柔和区分 */
+.editor-boolean[data-value="null"],
+.editor-null {
+  color: #f472b6;
+}
+
+/* Punctuation - slate灰，低调衬托 */
+.editor-punctuation {
+  color: #94a3b8;
+}
+
+/* Colon - 浅灰 */
+.editor-colon {
+  color: #64748b;
+}
