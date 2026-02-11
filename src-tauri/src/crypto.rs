@@ -1,6 +1,6 @@
 use aes::cipher::{block_padding::Pkcs7, BlockDecryptMut, BlockEncryptMut, KeyIvInit};
 use base64::{engine::general_purpose::STANDARD, Engine as _};
-use md5::Md5;
+
 use rand::rngs::OsRng;
 use rsa::{
     pkcs1::{DecodeRsaPublicKey, EncodeRsaPublicKey, LineEnding},
@@ -115,9 +115,8 @@ pub fn rsa_decrypt(encrypted_text: &str, private_key_pem: &str) -> Result<String
 
 #[tauri::command]
 pub fn md5_hash(text: &str) -> String {
-    let mut hasher = Md5::new();
-    hasher.update(text.as_bytes());
-    hex::encode(hasher.finalize())
+    let digest = md5::compute(text.as_bytes());
+    hex::encode(digest.as_slice())
 }
 
 #[tauri::command]
