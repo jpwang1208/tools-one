@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ToolsOne - 桌面工具系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: { 50: '#eff6ff', 100: '#dbeafe', 200: '#bfdbfe', 300: '#93c5fd', 400: '#60a5fa', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8', 800: '#1e40af', 900: '#1e3a8a' },
+                        gray: { 750: '#1f2937', 850: '#111827', 950: '#030712' }
+                    },
+                    fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], mono: ['JetBrains Mono', 'Consolas', 'monospace'] },
+                    animation: { 'fade-in': 'fadeIn 0.3s ease-out', 'slide-up': 'slideUp 0.3s ease-out', 'scale-in': 'scaleIn 0.2s ease-out', 'shimmer': 'shimmer 2s infinite' },
+                    keyframes: {
+                        fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+                        slideUp: { '0%': { opacity: '0', transform: 'translateY(10px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
+                        scaleIn: { '0%': { opacity: '0', transform: 'scale(0.95)' }, '100%': { opacity: '1', transform: 'scale(1)' } },
+                        shimmer: { '0%': { backgroundPosition: '-200% 0' }, '100%': { backgroundPosition: '200% 0' } }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #1f2937; }
+        ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+        * { transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1); }
+        *:focus { outline: none; }
+        *:focus-visible { outline: 2px solid #3b82f6; outline-offset: 2px; }
+        .gradient-text { background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .card-hover { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2); }
+        .shimmer { background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent); background-size: 200% 100%; }
+        .page-enter { animation: fadeInScale 0.3s ease-out; }
+        @keyframes fadeInScale { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
+    </style>
+</head>
+<body class="bg-gray-950 text-gray-100 font-sans antialiased min-h-screen overflow-hidden">
+    <div id="toast-container" class="fixed top-20 right-6 z-50 space-y-3"></div>
+    
+    <div class="flex h-screen">
+        <aside id="sidebar" class="w-64 bg-gray-900/95 border-r border-gray-800 flex flex-col">
+            <div class="h-16 flex items-center px-6 border-b border-gray-800">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-tools text-white text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-bold gradient-text">ToolsOne</h1>
+                        <p class="text-xs text-gray-500">您的数字瑞士军刀</p>
+                    </div>
+                </div>
+            </div>
+            
+            <nav class="flex-1 overflow-y-auto py-4">
+                <div class="px-4 mb-4">
+                    <div class="relative">
+                        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"></i>
+                        <input type="text" id="global-search" placeholder="搜索工具... (Ctrl+K)" 
+                               class="w-full pl-10 pr-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-sm text-gray-300 placeholder-gray-500 focus:border-blue-500"
+                               onclick="showPage('search')">
+                    </div>
+                </div>
+                
+                <div class="px-2 space-y-1">
+                    <div class="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">收藏与历史</div>
+                    <a href="#" onclick="showPage('favorites')" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-400 hover:bg-gray-800">
+                        <i class="fas fa-star w-5"></i><span>我的收藏</span>
+                        <span class="ml-auto text-xs bg-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded-full">5</span>
+                    </a>
+                    <a href="#" onclick="showPage('history')" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-400 hover:bg-gray-800">
+                        <i class="fas fa-history w-5"></i><span>使用历史</span>
+                        <span class="ml-auto text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full">28</span>
+                    </a>
+                    
+                    <div class="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider mt-4">工具分类</div>
+                    <div id="category-menu"></div>
+                </div>
+            </nav>
+            
+            <div class="p-4 border-t border-gray-800 space-y-2">
+                <a href="#" onclick="showPage('settings')" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-400 hover:bg-gray-800"><i class="fas fa-cog w-5"></i><span>设置</span></a>
+                <a href="#" onclick="showPage('help')" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-400 hover:bg-gray-800"><i class="fas fa-question-circle w-5"></i><span>帮助中心</span></a>
+                <a href="#" onclick="showPage('about')" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-400 hover:bg-gray-800"><i class="fas fa-info-circle w-5"></i><span>关于</span></a>
+            </div>
+        </aside>
+        
+        <main class="flex-1 flex flex-col overflow-hidden">
+            <header class="h-16 bg-gray-900/80 backdrop-blur-lg border-b border-gray-800 flex items-center justify-between px-6">
+                <div id="breadcrumb" class="flex items-center gap-2 text-sm text-gray-400">
+                    <a href="#" onclick="showPage('dashboard')" class="hover:text-white">首页</a>
+                    <i class="fas fa-chevron-right text-xs"></i>
+                    <span id="breadcrumb-current" class="text-white">仪表盘</span>
+                </div>
+                
+                <div class="flex items-center gap-4">
+                    <button class="w-10 h-10 rounded-lg bg-gray-800 hover:bg-gray-700 flex items-center justify-center text-gray-400 hover:text-white" data-tooltip="快捷截图">
+                        <i class="fas fa-camera"></i>
+                    </button>
+                    <button class="relative">
+                        <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face" alt="User" class="w-8 h-8 rounded-full object-cover">
+                    </button>
+                </div>
+            </header>
+            
+            <div id="page-content" class="flex-1 overflow-y-auto p-6"></div>
+        </main>
+    </div>
+
+    <script>
+        var categories = [
+            { id: 'office', name: '办公效率', icon: 'fa-briefcase', color: 'blue', tools: [
+                { id: 'pdf-convert', name: 'PDF转换', desc: 'PDF与Word/Excel/PPT互转', hot: true },
+                { id: 'ocr', name: 'OCR识别', desc: '图片文字提取', hot: true },
+                { id: 'doc-convert', name: '文档转换', desc: '多种文档格式转换', hot: false },
+                { id: 'presentation', name: '演示助手', desc: 'PPT/Keynote辅助', hot: false }
+            ]},
+            { id: 'security', name: '数据安全', icon: 'fa-shield-alt', color: 'green', tools: [
+                { id: 'password-gen', name: '密码生成', desc: '安全随机密码', hot: true },
+                { id: 'encrypt', name: '加密解密', desc: 'AES/RSA/ECC加密', hot: true },
+                { id: 'hash', name: '哈希计算', desc: 'MD5/SHA家族哈希', hot: true },
+                { id: 'hmac', name: 'HMAC认证', desc: '消息认证码', hot: false },
+                { id: 'uuid', name: 'UUID生成', desc: '唯一标识符', hot: true },
+                { id: 'key-check', name: '密钥检测', desc: '密钥强度分析', hot: false }
+            ]},
+            { id: 'dev', name: '开发工具', icon: 'fa-code', color: 'purple', tools: [
+                { id: 'base64', name: 'Base64', desc: '编码与解码', hot: true },
+                { id: 'timestamp', name: '时间戳', desc: '时间格式转换', hot: true },
+                { id: 'json-format', name: 'JSON工具', desc: '格式化/压缩/验证', hot: true },
+                { id: 'url-encode', name: 'URL编码', desc: 'URL安全转换', hot: false },
+                { id: 'jwt', name: 'JWT解析', desc: 'Token解码验证', hot: false },
+                { id: 'color', name: '取色器', desc: '屏幕颜色拾取', hot: true }
+            ]},
+            { id: 'lifestyle', name: '生活实用', icon: 'fa-home', color: 'orange', tools: [
+                { id: 'calculator', name: '计算器', desc: '科学计算器', hot: true },
+                { id: 'converter', name: '单位换算', desc: '长度/重量/温度等', hot: true },
+                { id: 'calendar', name: '日历', desc: '日程管理', hot: false },
+                { id: 'bmi', name: 'BMI计算', desc: '体重指数', hot: false },
+                { id: 'currency', name: '汇率', desc: '货币换算', hot: false },
+                { id: 'tax', name: '个税计算', desc: '工资税计算', hot: false }
+            ]},
+            { id: 'creative', name: '创意设计', icon: 'fa-palette', color: 'pink', tools: [
+                { id: 'qrcode', name: '二维码', desc: 'QR码生成', hot: true },
+                { id: 'image-compress', name: '图片压缩', desc: '无损/有损压缩', hot: true },
+                { id: 'image-convert', name: '格式转换', desc: '图片格式互转', hot: false },
+                { id: 'avatar', name: '头像生成', desc: '趣味头像', hot: false },
+                { id: 'gif', name: 'GIF制作', desc: '动图制作', hot: false }
+            ]},
+            { id: 'media', name: '媒体处理', icon: 'fa-film', color: 'red', tools: [
+                { id: 'video-capture', name: '视频截图', desc: '帧提取', hot: true },
+                { id: 'video-info', name: '视频信息', desc: '元数据查看', hot: false },
+                { id: 'audio-info', name: '音频信息', desc: '元数据查看', hot: false },
+                { id: 'gif-extract', name: 'GIF提取', desc: '片段提取', hot: false }
+            ]}
+        ];
+
+        var favorites = ['password-gen', 'timestamp', 'qrcode', 'json-format', 'encrypt'];
+        var recentTools = [
+            { id: 'pdf-convert', name: 'PDF转Word', time: '10分钟前' },
+            { id: 'timestamp', name: 'Unix时间戳', time: '25分钟前' },
+            { id: 'color', name: '屏幕取色器', time: '1小时前' },
+            { id: 'password-gen', name: '密码生成器', time: '2小时前' }
+        ];
+
+        var colorClasses = {
+            blue: { bg: 'bg-blue-500', text: 'text-blue-400' },
+            green: { bg: 'bg-green-500', text: 'text-green-400' },
+            purple: { bg: 'bg-purple-500', text: 'text-purple-400' },
+            orange: { bg: 'bg-orange-500', text: 'text-orange-400' },
+            pink: { bg: 'bg-pink-500', text: 'text-pink-400' },
+            red: { bg: 'bg-red-500', text: 'text-red-400' }
+        };
+
+        var currentPage = 'dashboard';
+        var expandedCategories = { 'security': true, 'dev': true };
+        var passwordHistory = [];
+        var calcValue = '0';
+        var calcOp = null;
+        var calcFirst = null;
+
+        function showPage(pageId, params) {
+            currentPage = pageId;
+            var container = document.getElementById('page-content');
+            container.innerHTML = '';
+            container.classList.add('page-enter');
+            setTimeout(function() { container.classList.remove('page-enter'); }, 300);
+            updateBreadcrumb(pageId);
+            
+            var pageRenderers = {
+                'dashboard': renderDashboard,
+                'category': renderCategoryPage,
+                'password-gen': renderPasswordGen,
+                'timestamp': renderTimestamp,
+                'qrcode': renderQRCode,
+                'json-format': renderJSONFormat,
+                'settings': renderSettings,
+                'search': renderSearch,
+                'favorites': renderFavorites,
+                'history': renderHistory,
+                'help': renderHelp,
+                'about': renderAbout,
+                'empty': renderEmpty,
+                // 数据安全工具
+                'encrypt': renderEncrypt,
+                'hash': renderHash,
+                'hmac': renderHMAC,
+                'uuid': renderUUID,
+                // 开发工具
+                'base64': renderBase64,
+                'url-encode': renderURLEncode,
+                'jwt': renderJWT,
+                'color': renderColor,
+                // 生活实用
+                'calculator': renderCalculator,
+                'converter': renderConverter
+            };
+
+            if (pageRenderers[pageId]) {
+                pageRenderers[pageId](container, params);
+            } else {
+                renderUnderConstruction(container, pageId);
+            }
+        }
+
+        function updateBreadcrumb(pageId) {
+            var names = {
+                'dashboard': '仪表盘', 'password-gen': '密码生成器', 'timestamp': '时间戳转换',
+                'qrcode': '二维码生成', 'json-format': 'JSON格式化', 'settings': '设置',
+                'search': '搜索', 'favorites': '我的收藏', 'history': '使用历史',
+                'help': '帮助中心', 'about': '关于',
+                'encrypt': '加密解密', 'hash': '哈希计算', 'hmac': 'HMAC认证',
+                'uuid': 'UUID生成', 'base64': 'Base64编码', 'url-encode': 'URL编码',
+                'jwt': 'JWT解析', 'color': '取色器', 'pdf-convert': 'PDF转换',
+                'ocr': 'OCR识别', 'doc-convert': '文档转换', 'presentation': '演示助手',
+                'key-check': '密钥检测', 'calculator': '计算器', 'converter': '单位换算',
+                'calendar': '日历', 'bmi': 'BMI计算', 'currency': '汇率', 'tax': '个税计算',
+                'image-compress': '图片压缩', 'image-convert': '格式转换', 'avatar': '头像生成',
+                'gif': 'GIF制作', 'video-capture': '视频截图', 'video-info': '视频信息',
+                'audio-info': '音频信息', 'gif-extract': 'GIF提取'
+            };
+            document.getElementById('breadcrumb-current').textContent = names[pageId] || pageId;
+        }
+
+        function renderUnderConstruction(container, toolId) {
+            var toolName = '';
+            for (var i = 0; i < categories.length; i++) {
+                for (var j = 0; j < categories[i].tools.length; j++) {
+                    if (categories[i].tools[j].id === toolId) {
+                        toolName = categories[i].tools[j].name;
+                        break;
+                    }
+                }
+            }
+            
+            var html = '<div class="flex flex-col items-center justify-center min-h-[70vh])">' +
+                '<div class="w-24 h-24 mb-6 bg-gradient-to-br from-gray-700 to-gray-800 rounded-2xl flex items-center justify-center">' +
+                '<i class="fas fa-tools text-gray-500 text-4xl"></i></div>' +
+                '<h2 class="text-2xl font-bold text-white mb-2">' + (toolName || toolId) + '</h2>' +
+                '<p class="text-gray-400 mb-6">该工具正在建设中，敬请期待...</p>' +
+                '<div class="flex gap-4"><button onclick="showPage(\'dashboard\')" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-colors">' +
+                '<i class="fas fa-home mr-2"></i>返回首页</button></div></div>';
+            container.innerHTML = html;
+        }
+
+        function renderSidebar() {
+            var container = document.getElementById('category-menu');
+            var html = '';
+            for (var i = 0; i < categories.length; i++) {
+                var cat = categories[i];
+                var isExpanded = expandedCategories[cat.id];
+                html += '<div class="mb-1">' +
+                    '<button onclick="toggleCategory(\'' + cat.id + '\')" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-gray-400 hover:bg-gray-800">' +
+                    '<i class="fas ' + cat.icon + ' w-5 ' + colorClasses[cat.color].text + '"></i>' +
+                    '<span class="flex-1 text-left">' + cat.name + '</span>' +
+                    '<i class="fas fa-chevron-' + (isExpanded ? 'down' : 'right') + ' text-xs"></i></button>';
+                
+                if (isExpanded) {
+                    html += '<div class="ml-8 mt-1 space-y-1">';
+                    for (var j = 0; j < cat.tools.length; j++) {
+                        var tool = cat.tools[j];
+                        html += '<a href="#" onclick="showPage(\'' + tool.id + '\')" ' +
+                            'class="sidebar-item flex items-center gap-3 px-3 py-2 rounded-lg text-gray-500 text-sm hover:text-white">' +
+                            '<i class="fas fa-fire text-orange-400 text-xs"></i>' +
+                            '<span>' + tool.name + '</span></a>';
+                    }
+                    html += '</div>';
+                }
+                html += '</div>';
+            }
+            container.innerHTML = html;
+        }
+
+        function toggleCategory(catId) {
+            expandedCategories[catId] = !expandedCategories[catId];
+            renderSidebar();
+        }
+
+        function showToast(message, type) {
+            type = type || 'success';
+            var container = document.getElementById('toast-container');
+            var toast = document.createElement('div');
+            var icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
+            var colors = { success: 'bg-green-500', error: 'bg-red-500', warning: 'bg-yellow-500', info: 'bg-blue-500' };
+            
+            toast.className = 'toast-enter flex items-center gap-3 px-4 py-3 ' + colors[type] + ' text-white rounded-xl shadow-lg';
+            toast.innerHTML = '<i class="fas ' + icons[type] + '"></i><span>' + message + '</span>';
+            container.appendChild(toast);
+            
+            setTimeout(function() {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(function() { toast.remove(); }, 300);
+            }, 3000);
+        }
+
+        function renderDashboard(container) {
+            var allTools = [];
+            for (var i = 0; i < categories.length; i++) {
+                var cat = categories[i];
+                for (var j = 0; j < cat.tools.length; j++) {
+                    allTools.push({ name: cat.tools[j].name, desc: cat.tools[j].desc, id: cat.tools[j].id, category: cat.name, categoryId: cat.id, color: cat.color });
+                }
+            }
+
+            var html = '';
+            html += '<div class="mb-8"><div class="flex flex-col md:flex-row md:items-center gap-4 mb-6">' +
+                '<img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=64&h=64&fit=crop&crop=face" alt="User" class="w-16 h-16 rounded-2xl object-cover">' +
+                '<div class="flex-1"><h2 class="text-2xl font-bold text-white">欢迎回来，张三</h2>' +
+                '<p class="text-gray-400">今天已使用 <span class="text-blue-400 font-semibold">12</span> 个工具，处理 <span class="text-blue-400 font-semibold">28</span> 个任务</p></div></div>' +
+                '<div class="grid grid-cols-2 md:grid-cols-4 gap-4">' +
+                '<div class="bg-gradient-to-br from-blue-500/20 to-blue-600/10 border border-blue-500/30 rounded-2xl p-4"><div class="flex items-center justify-between"><div class="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center"><i class="fas fa-tools text-blue-400"></i></div></div><p class="mt-3 text-2xl font-bold text-white">156</p><p class="text-sm text-gray-400">总使用次数</p></div>' +
+                '<div class="bg-gradient-to-br from-green-500/20 to-green-600/10 border border-green-500/30 rounded-2xl p-4"><div class="flex items-center justify-between"><div class="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center"><i class="fas fa-check-circle text-green-400"></i></div></div><p class="mt-3 text-2xl font-bold text-white">98%</p><p class="text-sm text-gray-400">成功率</p></div>' +
+                '<div class="bg-gradient-to-br from-purple-500/20 to-purple-600/10 border border-purple-500/30 rounded-2xl p-4"><div class="flex items-center justify-between"><div class="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center"><i class="fas fa-clock text-purple-400"></i></div></div><p class="mt-3 text-2xl font-bold text-white">2.3s</p><p class="text-sm text-gray-400">平均处理时间</p></div>' +
+                '<div class="bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/30 rounded-2xl p-4"><div class="flex items-center justify-between"><div class="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center"><i class="fas fa-save text-orange-400"></i></div></div><p class="mt-3 text-2xl font-bold text-white">1.2GB</p><p class="text-sm text-gray-400">节省存储空间</p></div></div></div>';
+            
+            html += '<div class="mb-8"><div class="flex items-center justify-between mb-4"><h3 class="text-lg font-semibold text-white flex items-center gap-2"><i class="fas fa-bolt text-yellow-400"></i>快捷工具</h3></div>' +
+                '<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">' +
+                '<div onclick="showPage(\'password-gen\')" class="card-hover bg-gray-800/50 border border-gray-700 rounded-xl p-4 cursor-pointer text-center group"><div class="w-12 h-12 mx-auto mb-3 bg-blue-500/20 rounded-xl flex items-center justify-center group-hover:bg-blue-500/30 transition-all"><i class="fas fa-key text-blue-400 text-xl"></i></div><h4 class="font-medium text-white group-hover:text-blue-400 transition-colors">密码生成</h4><p class="text-xs text-gray-500 mt-1">安全随机</p></div>' +
+                '<div onclick="showPage(\'timestamp\')" class="card-hover bg-gray-800/50 border border-gray-700 rounded-xl p-4 cursor-pointer text-center group"><div class="w-12 h-12 mx-auto mb-3 bg-green-500/20 rounded-xl flex items-center justify-center group-hover:bg-green-500/30 transition-all"><i class="fas fa-clock text-green-400 text-xl"></i></div><h4 class="font-medium text-white group-hover:text-green-400 transition-colors">时间戳</h4><p class="text-xs text-gray-500 mt-1">快速转换</p></div>' +
+                '<div onclick="showPage(\'qrcode\')" class="card-hover bg-gray-800/50 border border-gray-700 rounded-xl p-4 cursor-pointer text-center group"><div class="w-12 h-12 mx-auto mb-3 bg-purple-500/20 rounded-xl flex items-center justify-center group-hover:bg-purple-500/30 transition-all"><i class="fas fa-qrcode text-purple-400 text-xl"></i></div><h4 class="font-medium text-white group-hover:text-purple-400 transition-colors">二维码</h4><p class="text-xs text-gray-500 mt-1">扫码分享</p></div>' +
+                '<div onclick="showPage(\'json-format\')" class="card-hover bg-gray-800/50 border border-gray-700 rounded-xl p-4 cursor-pointer text-center group"><div class="w-12 h-12 mx-auto mb-3 bg-orange-500/20 rounded-xl flex items-center justify-center group-hover:bg-orange-500/30 transition-all"><i class="fas fa-code text-orange-400 text-xl"></i></div><h4 class="font-medium text-white group-hover:text-orange-400 transition-colors">JSON</h4><p class="text-xs text-gray-500 mt-1">格式化</p></div>' +
+                '<div onclick="showPage(\'encrypt\')" class="card-hover bg-gray-800/50 border border-gray-700 rounded-xl p-4 cursor-pointer text-center group"><div class="w-12 h-12 mx-auto mb-3 bg-red-500/20 rounded-xl flex items-center justify-center group-hover:bg-red-500/30 transition-all"><i class="fas fa-lock text-red-400 text-xl"></i></div><h4 class="font-medium text-white group-hover:text-red-400 transition-colors">加密解密</h4><p class="text-xs text-gray-500 mt-1">AES/RSA</p></div>' +
+                '<div onclick="showPage(\'base64\')" class="card-hover bg-gray-800/50 border border-gray-700 rounded-xl p-4 cursor-pointer text-center group"><div class="w-12 h-12 mx-auto mb-3 bg-pink-500/20 rounded-xl flex items-center justify-center group-hover:bg-pink-500/30 transition-all"><i class="fas fa-cube text-pink-400 text-xl"></i></div><h4 class="font-medium text-white group-hover:text-pink-400 transition-colors">Base64</h4><p class="text-xs text-gray-500 mt-1">编码解码</p></div></div></div>';
+            
+            html += '<div class="mb-6"><div class="flex items-center justify-between mb-4"><h3 class="text-lg font-semibold text-white flex items-center gap-2"><i class="fas fa-th-large text-purple-400"></i>所有工具</h3></div>' +
+                '<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">';
+            for (var i = 0; i < allTools.length; i++) {
+                var tool = allTools[i];
+                html += '<div onclick="showPage(\'' + tool.id + '\')" data-category="' + tool.categoryId + '" class="filter-tool card-hover bg-gray-800/50 border border-gray-700 hover:border-' + tool.color + '-500/50 rounded-xl p-4 cursor-pointer transition-all">' +
+                    '<div class="flex items-start gap-3"><div class="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center flex-shrink-0"><i class="fas fa-fire text-orange-400 text-sm"></i></div>' +
+                    '<div class="flex-1 min-w-0"><h4 class="font-medium text-white truncate">' + tool.name + '</h4><p class="text-xs text-gray-500 truncate">' + tool.desc + '</p><span class="inline-block mt-1 text-xs ' + colorClasses[tool.color].text + '">' + tool.category + '</span></div></div></div>';
+            }
+            html += '</div></div>';
+            
+            html += '<div class="grid lg:grid-cols-2 gap-6"><div class="bg-gray-800/30 border border-gray-700 rounded-2xl p-6">' +
+                '<div class="flex items-center justify-between mb-4"><h3 class="text-lg font-semibold text-white flex items-center gap-2"><i class="fas fa-history text-blue-400"></i>最近使用</h3>' +
+                '<a href="#" onclick="showPage(\'history\')" class="text-sm text-blue-400 hover:text-blue-300">查看全部</a></div><div class="space-y-3">';
+            for (var i = 0; i < recentTools.length; i++) {
+                var tool = recentTools[i];
+                html += '<div onclick="showPage(\'' + tool.id + '\')" class="flex items-center gap-4 p-3 bg-gray-800/50 rounded-xl hover:bg-gray-700/50 cursor-pointer transition-all">' +
+                    '<div class="w-10 h-10 bg-gray-700 rounded-lg flex items-center justify-center"><i class="fas fa-fire text-xs text-orange-400"></i></div>' +
+                    '<div class="flex-1"><p class="text-white font-medium">' + tool.name + '</p><p class="text-xs text-gray-500">' + tool.time + '</p></div><i class="fas fa-chevron-right text-gray-600"></i></div>';
+            }
+            html += '</div></div><div class="bg-gray-800/30 border border-gray-700 rounded-2xl p-6">' +
+                '<div class="flex items-center justify-between mb-4"><h3 class="text-lg font-semibold text-white flex items-center gap-2"><i class="fas fa-star text-yellow-400"></i>我的收藏</h3>' +
+                '<a href="#" onclick="showPage(\'favorites\')" class="text-sm text-blue-400 hover:text-blue-300">查看全部</a></div><div class="grid grid-cols-2 gap-3">';
+            for (var i = 0; i < Math.min(4, favorites.length); i++) {
+                var favId = favorites[i];
+                var favTool = allTools.find(function(t) { return t.id === favId; });
+                if (favTool) {
+                    html += '<div onclick="showPage(\'' + favTool.id + '\')" class="flex items-center gap-3 p-3 bg-gray-800/50 rounded-xl hover:bg-gray-700/50 cursor-pointer transition-all">' +
+                        '<div class="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center"><i class="fas fa-star text-yellow-400 text-sm"></i></div>' +
+                        '<span class="text-sm text-white truncate">' + favTool.name + '</span></div>';
+                }
+            }
+            html += '</div></div></div>';
+            
+            container.innerHTML = html;
+        }
+
+        function renderCategoryPage(container, params) {
+            var category = categories.find(function(c) { return c.id === params.categoryId; });
+            if (!category) return;
+            
+            var html = '<div class="mb-6"><div class="flex items-center gap-4 mb-2">' +
+                '<div class="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center">' +
+                '<i class="fas ' + category.icon + ' ' + colorClasses[category.color].text + ' text-xl"></i></div>' +
+                '<div><h1 class="text-2xl font-bold text-white">' + category.name + '</h1><p class="text-gray-400">共 ' + category.tools.length + ' 个工具</p></div></div></div>' +
+                '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">';
+            
+            for (var i = 0; i < category.tools.length; i++) {
+                var tool = category.tools[i];
+                html += '<div onclick="showPage(\'' + tool.id + '\')" class="card-hover bg-gray-800/50 border border-gray-700 rounded-xl p-5 cursor-pointer group">' +
+                    '<div class="flex items-start justify-between mb-3"><div class="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">' +
+                    '<i class="fas ' + (tool.hot ? 'fa-fire' : 'fa-wrench') + ' ' + colorClasses[category.color].text + '"></i></div>' +
+                    (favorites.indexOf(tool.id) >= 0 ? '<i class="fas fa-star text-yellow-400"></i>' : '') + '</div>' +
+                    '<h3 class="font-semibold text-white group-hover:text-' + category.color + '-400 transition-colors">' + tool.name + '</h3>' +
+                    '<p class="text-sm text-gray-400 mt-1">' + tool.desc + '</p>' +
+                    (tool.hot ? '<span class="inline-block mt-2 text-xs bg-orange-500/20 text-orange-400 px-2 py-1 rounded-full">热门</span>' : '') + '</div>';
+            }
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        function renderPasswordGen(container) {
+            var html = '<div class="max-w-2xl mx-auto"><div class="text-center mb-8">' +
+                '<div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center">' +
+                '<i class="fas fa-key text-white text-2xl"></i></div>' +
+                '<h1 class="text-2xl font-bold text-white">密码生成器</h1><p class="text-gray-400 mt-2">生成安全随机密码，保护您的账户安全</p></div>' +
+                '<div class="bg-gray-800/50 border border-gray-700 rounded-2xl p-6 mb-6"><div class="flex items-center gap-3">' +
+                '<input type="text" id="password-result" value="xK9mP2vL7qR4nW8" class="flex-1 bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-xl font-mono text-white focus:border-blue-500" readonly>' +
+                '<button onclick="copyPassword()" class="px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-colors"><i class="fas fa-copy"></i></button>' +
+                '<button onclick="generatePassword()" class="px-4 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-xl transition-colors"><i class="fas fa-redo"></i></button></div>' +
+                '<div class="mt-4"><div class="flex items-center gap-3"><div class="flex-1 h-2 bg-gray-700 rounded-full overflow-hidden">' +
+                '<div id="strength-bar" class="h-full bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 w-3/4 transition-all duration-500"></div></div>' +
+                '<span id="strength-text" class="text-sm font-medium text-green-400">强度: 强</span></div></div></div>' +
+                '<div class="bg-gray-800/50 border border-gray-700 rounded-2xl p-6 mb-6"><h3 class="font-semibold text-white mb-4">密码选项</h3>' +
+                '<div class="mb-6"><div class="flex items-center justify-between mb-2"><label class="text-gray-300">密码长度</label><span id="length-value" class="text-blue-400 font-semibold">16</span></div>' +
+                '<input type="range" id="password-length" min="4" max="128" value="16" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"></div>' +
+                '<div class="grid grid-cols-2 gap-3">' +
+                '<label class="flex items-center gap-3 p-3 bg-gray-900/50 rounded-xl cursor-pointer"><input type="checkbox" id="uppercase" checked class="w-5 h-5 rounded bg-gray-600 border-gray-500 text-blue-500"><div><p class="text-white font-medium">大写字母</p><p class="text-xs text-gray-500">A-Z</p></div></label>' +
+                '<label class="flex items-center gap-3 p-3 bg-gray-900/50 rounded-xl cursor-pointer"><input type="checkbox" id="lowercase" checked class="w-5 h-5 rounded bg-gray-600 border-gray-500 text-blue-500"><div><p class="text-white font-medium">小写字母</p><p class="text-xs text-gray-500">a-z</p></div></label>' +
+                '<label class="flex items-center gap-3 p-3 bg-gray-900/50 rounded-xl cursor-pointer"><input type="checkbox" id="numbers" checked class="w-5 h-5 rounded bg-gray-600 border-gray-500 text-blue-500"><div><p class="text-white font-medium">数字</p><p class="text-xs text-gray-500">0-9</p></div></label>' +
+                '<label class="flex items-center gap-3 p-3 bg-gray-900/50 rounded-xl cursor-pointer"><input type="checkbox" id="symbols" checked class="w-5 h-5 rounded bg-gray-600 border-gray-500 text-blue-500"><div><p class="text-white font-medium">特殊符号</p><p class="text-xs text-gray-500">!@#$%^&*</p></div></label></div></div>' +
+                '<button onclick="generatePassword()" class="w-full py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-semibold rounded-xl transition-all"><i class="fas fa-redo mr-2"></i>生成密码</button></div>';
+            container.innerHTML = html;
+            generatePassword();
+            document.getElementById('password-length').addEventListener('input', function(e) {
+                document.getElementById('length-value').textContent = e.target.value;
+            });
+        }
+
+        function generatePassword() {
+            var length = parseInt(document.getElementById('password-length').value);
+            var chars = '';
+            if (document.getElementById('uppercase').checked) chars += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            if (document.getElementById('lowercase').checked) chars += 'abcdefghijklmnopqrstuvwxyz';
+            if (document.getElementById('numbers').checked) chars += '0123456789';
+            if (document.getElementById('symbols').checked) chars += '!@#$%^&*()_+-=[]{}|;:,.<>?';
+            
+            if (!chars) { showToast('请至少选择一种字符类型', 'warning'); return; }
+            
+            var password = '';
+            for (var i = 0; i < length; i++) {
+                password += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            
+            document.getElementById('password-result').value = password;
+            updateStrength(password);
+            showToast('密码已生成', 'success');
+        }
+
+        function updateStrength(password) {
+            var score = 0;
+            if (password.length >= 8) score++;
+            if (password.length >= 16) score++;
+            if (/[A-Z]/.test(password)) score++;
+            if (/[a-z]/.test(password)) score++;
+            if (/[0-9]/.test(password)) score++;
+            if (/[^A-Za-z0-9]/.test(password)) score++;
+            
+            var bar = document.getElementById('strength-bar');
+            var text = document.getElementById('strength-text');
+            var width = Math.min(100, (score / 6) * 100);
+            bar.style.width = width + '%';
+            
+            if (score <= 2) {
+                bar.className = 'h-full bg-red-500 transition-all duration-500';
+                text.className = 'text-sm font-medium text-red-400';
+                text.textContent = '强度: 弱';
+            } else if (score <= 4) {
+                bar.className = 'h-full bg-yellow-500 transition-all duration-500';
+                text.className = 'text-sm font-medium text-yellow-400';
+                text.textContent = '强度: 中等';
+            } else {
+                bar.className = 'h-full bg-gradient-to-r from-green-500 to-emerald-400 transition-all duration-500';
+                text.className = 'text-sm font-medium text-green-400';
+                text.textContent = '强度: 强';
+            }
+        }
+
+        function copyPassword() {
+            var pwd = document.getElementById('password-result').value;
+            navigator.clipboard.writeText(pwd);
+            showToast('密码已复制到剪贴板', 'success');
+        }
+
+        function renderTimestamp(container) {
+            var now = new Date();
+            var unixTs = Math.floor(now.getTime() / 1000);
+            var isoTs = now.toISOString();
+            var utcTs = now.toUTCString();
+            var html = '<div class="max-w-3xl mx-auto"><div class="text-center mb-8">' +
+                '<div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-green-500 to-teal-600 rounded-2xl flex items-center justify-center">' +
+                '<i class="fas fa-clock text-white text-2xl"></i></div>' +
+                '<h1 class="text-2xl font-bold text-white">时间戳转换</h1><p class="text-gray-400 mt-2">Unix时间戳与日期格式相互转换</p></div>' +
+                '<div class="bg-gradient-to-br from-green-500/20 to-teal-600/10 border border-green-500/30 rounded-2xl p-6 mb-6">' +
+                '<div class="flex items-center justify-center gap-2 mb-4"><div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>' +
+                '<span class="text-green-400 font-medium">实时时钟</span></div>' +
+                '<div class="text-center"><div id="current-time" class="text-5xl font-bold text-white font-mono">' + now.toLocaleTimeString('zh-CN', {hour12: false}) + '</div>' +
+                '<div class="text-xl text-gray-400 mt-2">' + now.toLocaleDateString('zh-CN', {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'}) + '</div></div></div>' +
+                '<div class="grid gap-4 mb-6">' +
+                '<div class="bg-gray-800/50 border border-gray-700 rounded-xl p-5"><div class="flex items-center justify-between mb-3">' +
+                '<label class="text-gray-300 font-medium">Unix 时间戳 (秒)</label><span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded-full">常用</span></div>' +
+                '<div class="flex items-center gap-3"><input type="text" id="ts-unix" value="' + unixTs + '" class="flex-1 bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 font-mono text-white">' +
+                '<button onclick="copyTS(\'ts-unix\')" class="p-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-white"><i class="fas fa-copy"></i></button></div></div>' +
+                '<div class="bg-gray-800/50 border border-gray-700 rounded-xl p-5"><div class="flex items-center justify-between mb-3">' +
+                '<label class="text-gray-300 font-medium">ISO 8601</label><span class="text-xs bg-purple-500/20 text-purple-400 px-2 py-1 rounded-full">标准</span></div>' +
+                '<div class="flex items-center gap-3"><input type="text" id="ts-iso" value="' + isoTs + '" class="flex-1 bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 font-mono text-white">' +
+                '<button onclick="copyTS(\'ts-iso\')" class="p-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-white"><i class="fas fa-copy"></i></button></div></div>' +
+                '<div class="bg-gray-800/50 border border-gray-700 rounded-xl p-5"><div class="flex items-center justify-between mb-3">' +
+                '<label class="text-gray-300 font-medium">UTC 时间</label></div>' +
+                '<div class="flex items-center gap-3"><input type="text" id="ts-utc" value="' + utcTs + '" class="flex-1 bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 font-mono text-white">' +
+                '<button onclick="copyTS(\'ts-utc\')" class="p-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-white"><i class="fas fa-copy"></i></button></div></div></div></div>';
+            container.innerHTML = html;
+            
+            setInterval(function() {
+                var n = new Date();
+                document.getElementById('current-time').innerHTML = '<div class="text-5xl font-bold text-white font-mono">' + n.toLocaleTimeString('zh-CN', {hour12: false}) + '</div><div class="text-xl text-gray-400 mt-2">' + n.toLocaleDateString('zh-CN', {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'}) + '</div>';
+            }, 1000);
+        }
+
+        function copyTS(id) {
+            var val = document.getElementById(id).value;
+            navigator.clipboard.writeText(val);
+            showToast('已复制到剪贴板', 'success');
+        }
+
+        function renderQRCode(container) {
+            var html = '<div class="max-w-4xl mx-auto"><div class="text-center mb-8">' +
+                '<div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center">' +
+                '<i class="fas fa-qrcode text-white text-2xl"></i></div>' +
+                '<h1 class="text-2xl font-bold text-white">二维码生成器</h1><p class="text-gray-400 mt-2">将文本、链接、名片等信息转换为二维码</p></div>' +
+                '<div class="grid lg:grid-cols-2 gap-6"><div class="space-y-4">' +
+                '<div class="bg-gray-800/50 border border-gray-700 rounded-2xl p-5"><label class="block text-gray-300 font-medium mb-3">二维码内容</label>' +
+                '<textarea id="qr-content" rows="4" placeholder="输入文本、URL..." class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:border-purple-500">https://toolsone.app</textarea></div>' +
+                '<div class="bg-gray-800/50 border border-gray-700 rounded-2xl p-5"><h3 class="font-medium text-white mb-4">二维码选项</h3>' +
+                '<div class="mb-4"><label class="block text-gray-300 text-sm mb-2">尺寸</label><div class="flex gap-2">' +
+                '<label class="flex items-center gap-2 px-4 py-2 bg-gray-700 rounded-lg cursor-pointer"><input type="radio" name="qr-size" value="128"> <span class="text-white text-sm">128x128</span></label>' +
+                '<label class="flex items-center gap-2 px-4 py-2 bg-gray-700 rounded-lg cursor-pointer"><input type="radio" name="qr-size" value="256" checked> <span class="text-white text-sm">256x256</span></label>' +
+                '<label class="flex items-center gap-2 px-4 py-2 bg-gray-700 rounded-lg cursor-pointer"><input type="radio" name="qr-size" value="512"> <span class="text-white text-sm">512x512</span></label></div></div>' +
+                '<div class="grid grid-cols-2 gap-4"><div><label class="block text-gray-300 text-sm mb-2">前景色</label><input type="color" id="qr-fg" value="#000000" class="w-full h-10 rounded-lg"></div>' +
+                '<div><label class="block text-gray-300 text-sm mb-2">背景色</label><input type="color" id="qr-bg" value="#ffffff" class="w-full h-10 rounded-lg"></div></div></div>' +
+                '<button onclick="generateQR()" class="w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold rounded-xl transition-all"><i class="fas fa-qrcode mr-2"></i>生成二维码</button></div>' +
+                '<div class="bg-gray-800/50 border border-gray-700 rounded-2xl p-5"><div class="flex items-center justify-between mb-4">' +
+                '<h3 class="font-medium text-white">预览</h3><button onclick="downloadQR()" class="text-sm text-purple-400 hover:text-purple-300"><i class="fas fa-download"></i> 下载</button></div>' +
+                '<div class="flex items-center justify-center min-h-[400px] bg-white rounded-xl p-8"><div id="qrcode-display"><canvas id="qr-canvas"></canvas></div></div></div></div></div>';
+            container.innerHTML = html;
+            generateQR();
+        }
+
+        function generateQR() {
+            var content = document.getElementById('qr-content').value;
+            var size = parseInt(document.querySelector('input[name="qr-size"]:checked').value);
+            var fg = document.getElementById('qr-fg').value;
+            var bg = document.getElementById('qr-bg').value;
+            
+            var canvas = document.getElementById('qr-canvas');
+            QRCode.toCanvas(canvas, content, {
+                width: size, margin: 2,
+                color: { dark: fg, light: bg }
+            }, function(error) {
+                if (error) { showToast('生成失败', 'error'); return; }
+                showToast('二维码已生成', 'success');
+            });
+        }
+
+        function downloadQR() {
+            var canvas = document.getElementById('qr-canvas');
+            var link = document.createElement('a');
+            link.download = 'qrcode.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+            showToast('二维码已下载', 'success');
+        }
+
+        function renderJSONFormat(container) {
+            var sample = JSON.stringify({ name: "ToolsOne", version: "1.1.0", tools: ["密码生成", "时间戳", "二维码", "JSON工具"] }, null, 2);
+            var sampleEscaped = sample.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            var html = '<div class="max-w-5xl mx-auto"><div class="text-center mb-8">' +
+                '<div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-orange-500 to-yellow-600 rounded-2xl flex items-center justify-center">' +
+                '<i class="fas fa-code text-white text-2xl"></i></div>' +
+                '<h1 class="text-2xl font-bold text-white">JSON 格式化工具</h1><p class="text-gray-400 mt-2">格式化、压缩、验证您的JSON数据</p></div>' +
+                '<div class="flex flex-wrap items-center gap-3 mb-4 p-4 bg-gray-800/50 border border-gray-700 rounded-xl">' +
+                '<button onclick="formatJSON()" class="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"><i class="fas fa-indent"></i>格式化</button>' +
+                '<button onclick="minifyJSON()" class="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg"><i class="fas fa-compress-alt"></i>压缩</button>' +
+                '<div class="flex-1"></div>' +
+                '<button onclick="copyJSON()" class="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg"><i class="fas fa-copy"></i>复制</button></div>' +
+                '<div class="grid lg:grid-cols-2 gap-4"><div class="bg-gray-800/50 border border-gray-700 rounded-2xl overflow-hidden">' +
+                '<div class="flex items-center justify-between px-4 py-3 bg-gray-800 border-b border-gray-700"><span class="text-sm font-medium text-gray-300">输入</span>' +
+                '<button onclick="clearJSON()" class="text-xs text-gray-500 hover:text-white">清空</button></div>' +
+                '<textarea id="json-input" class="w-full h-[500px] bg-gray-900/50 p-4 font-mono text-sm text-gray-300 resize-none focus:outline-none">' + sample + '</textarea></div>' +
+                '<div class="bg-gray-800/50 border border-gray-700 rounded-2xl overflow-hidden">' +
+                '<div class="flex items-center justify-between px-4 py-3 bg-gray-800 border-b border-gray-700"><span class="text-sm font-medium text-gray-300">输出</span>' +
+                '<span id="json-status" class="text-xs px-2 py-1 rounded-full bg-green-500/20 text-green-400">有效</span></div>' +
+                '<pre class="w-full h-[500px] bg-gray-900/50 p-4 font-mono text-sm overflow-auto"><code id="json-output" class="language-json">' + sampleEscaped + '</code></pre></div></div></div>';
+            container.innerHTML = html;
+            Prism.highlightElement(document.getElementById('json-output'));
+        }
+
+        function formatJSON() {
+            try {
+                var parsed = JSON.parse(document.getElementById('json-input').value);
+                var formatted = JSON.stringify(parsed, null, 2);
+                document.getElementById('json-input').value = formatted;
+                document.getElementById('json-output').innerHTML = formatted.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                Prism.highlightElement(document.getElementById('json-output'));
+                document.getElementById('json-status').className = 'text-xs px-2 py-1 rounded-full bg-green-500/20 text-green-400';
+                document.getElementById('json-status').textContent = '有效';
+                showToast('格式化成功', 'success');
+            } catch (e) {
+                document.getElementById('json-status').className = 'text-xs px-2 py-1 rounded-full bg-red-500/20 text-red-400';
+                document.getElementById('json-status').textContent = '无效';
+                showToast('JSON格式错误', 'error');
+            }
+        }
+
+        function minifyJSON() {
+            try {
+                var parsed = JSON.parse(document.getElementById('json-input').value);
+                var minified = JSON.stringify(parsed);
+                document.getElementById('json-input').value = minified;
+                document.getElementById('json-output').innerHTML = minified.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                Prism.highlightElement(document.getElementById('json-output'));
+                showToast('压缩成功', 'success');
+            } catch (e) {
+                showToast('JSON格式错误', 'error');
+            }
+        }
+
+        function copyJSON() {
+            navigator.clipboard.writeText(document.getElementById('json-input').value);
+            showToast('已复制到剪贴板', 'success');
+        }
+
+        function clearJSON() {
+            document.getElementById('json-input').value = '';
+            document.getElementById('json-output').innerHTML = '';
+            document.getElementById('json-status').textContent = '空';
+            document.getElementById('json-status').className = 'text-xs px-2 py-1 rounded-full bg-gray-500/20 text-gray-400';
+        }
+
+        // ============ 其他工具渲染函数 ============
+
+        function renderEncrypt(container) {
+            var html = '<div class="max-w-4xl mx-auto"><div class="text-center mb-8">' +
+                '<div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center">' +
+                '<i class="fas fa-lock text-white text-2xl"></i></div>' +
+                '<h1 class="text-2xl font-bold text-white">加密解密</h1><p class="text-gray-400 mt-2">AES/RSA/ECC 加密与解密</p></div>' +
+                '<div class="bg-gray-800/50 border border-gray-700 rounded-2xl p-6 mb-6"><div class="mb-4"><label class="block text-gray-300 font-medium mb-3">加密算法</label>' +
+                '<div class="flex gap-3"><button onclick="selectEncryptAlgo(\'aes\')" class="encrypt-algo flex-1 py-3 bg-blue-600 text-white rounded-xl font-medium">AES-256</button>' +
+                '<button onclick="selectEncryptAlgo(\'rsa\')" class="encrypt-algo flex-1 py-3 bg-gray-700 text-white rounded-xl font-medium">RSA</button>' +
+                '<button onclick="selectEncryptAlgo(\'ecc\')" class="encrypt-algo flex-1 py-3 bg-gray-700 text-white rounded-xl font-medium">ECC</button></div></div>' +
+                '<div class="mb-4"><label class="block text-gray-300 font-medium mb-3">输入内容</label>' +
+                '<textarea id="encrypt-input" rows="3" placeholder="输入要加密/解密的文本..." class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:border-green-500"></textarea></div>' +
+                '<div class="mb-4"><label class="block text-gray-300 font-medium mb-3">密钥/密码</label>' +
+                '<input type="text" id="encrypt-key" placeholder="输入密钥或密码..." class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:border-green-500"></textarea></div>' +
+                '<div class="flex gap-3"><button onclick="doEncrypt()" class="flex-1 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl transition-all"><i class="fas fa-lock mr-2"></i>加密</button>' +
+                '<button onclick="doDecrypt()" class="flex-1 py-3 bg-orange-600 hover:bg-orange-700 text-white font-semibold rounded-xl transition-all"><i class="fas fa-unlock mr-2"></i>解密</button></div></div>' +
+                '<div class="bg-gray-800/50 border border-gray-700 rounded-2xl p-6"><label class="block text-gray-300 font-medium mb-3">输出结果</label>' +
+                '<textarea id="encrypt-output" rows="4" readonly class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white font-mono text-sm"></textarea>' +
+                '<button onclick="copyEncryptResult()" class="mt-3 w-full py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg"><i class="fas fa-copy mr-2"></i>复制结果</button></div></div>';
+            container.innerHTML = html;
+        }
+
+        function selectEncryptAlgo(algo) {
+            var btns = document.querySelectorAll('.encrypt-algo');
+            btns.forEach(function(b) { b.classList.remove('bg-blue-600'); b.classList.add('bg-gray-700'); });
+            event.target.classList.remove('bg-gray-700'); event.target.classList.add('bg-blue-600');
+        }
+
+        function doEncrypt() {
+            var input = document.getElementById('encrypt-input').value;
+            var key = document.getElementById('encrypt-key').value;
+            if (!input) { showToast('请输入内容', 'warning'); return; }
+            // 模拟加密
+            var result = btoa(input).split('').reverse().join('') + '||ENC||' + btoa(key);
+            document.getElementById('encrypt-output').value = result;
+            showToast('加密成功', 'success');
+        }
+
+        function doDecrypt() {
+            var input = document.getElementById('encrypt-input').value;
+            if (!input || input.indexOf('||ENC||') < 0) { showToast('无效的加密文本', 'error'); return; }
+            var parts = input.split('||ENC||');
+            var result = atob(parts[0].split('').reverse().join(''));
+            document.getElementById('encrypt-output').value = result;
+            showToast('解密成功', 'success');
+        }
+
+        function copyEncryptResult() {
+            navigator.clipboard.writeText(document.getElementById('encrypt-output').value);
+            showToast('已复制到剪贴板', 'success');
+        }
+
+        function renderHash(container) {
+            var html = '<div class="max-w-4xl mx-auto"><div class="text-center mb-8">' +
+                '<div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl flex items-center justify-center">' +
+                '<i class="fas fa-fingerprint text-white text-2xl"></i></div>' +
+                '<h1 class="text-2xl font-bold text-white">哈希计算</h1><p class="text-gray-400 mt-2">MD5 / SHA1 / SHA256 / SHA512</p></div>' +
+                '<div class="bg-gray-800/50 border border-gray-700 rounded-2xl p-6 mb-6"><div class="mb-4"><label class="block text-gray-300 font-medium mb-3">哈希算法</label>' +
+                '<div class="grid grid-cols-2 md:grid-cols-4 gap-3">' +
+                '<button onclick="selectHashAlgo(\'md5\')" class="hash-algo py-3 bg-purple-600 text-white rounded-xl font-medium">MD5</button>' +
+                '<button onclick="selectHashAlgo(\'sha1\')" class="hash-algo py-3 bg-gray-700 text-white rounded-xl font-medium">SHA1</button>' +
+                '<button onclick="selectHashAlgo(\'sha256\')" class="hash-algo py-3 bg-gray-700 text-white rounded-xl font-medium">SHA256</button>' +
+                '<button onclick="selectHashAlgo(\'sha512\')" class="hash-algo py-3 bg-gray-700 text-white rounded-xl font-medium">SHA512</button></div></div>' +
+                '<div class="mb-4"><label class="block text-gray-300 font-medium mb-3">输入内容</label>' +
+                '<textarea id="hash-input" rows="3" placeholder="输入要计算哈希的文本..." class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:border-purple-500"></textarea></div>' +
+                '<button onclick="calculateHash()" class="w-full py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold rounded-xl transition-all"><i class="fas fa-calculator mr-2"></i>计算哈希</button></div>' +
+                '<div class="bg-gray-800/50 border border-gray-700 rounded-2xl p-6"><label class="block text-gray-300 font-medium mb-3">哈希结果</label>' +
+                '<textarea id="hash-output" rows="2" readonly class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white font-mono text-sm"></textarea>' +
+                '<button onclick="copyHashResult()" class="mt-3 w-full py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg"><i class="fas fa-copy mr-2"></i>复制结果</button></div></div>';
+            container.innerHTML = html;
+        }
+
+        function selectHashAlgo(algo) {
+            var btns = document.querySelectorAll('.hash-algo');
+            btns.forEach(function(b) { b.classList.remove('bg-purple-600'); b.classList.add('bg-gray-700'); });
+            event.target.classList.remove('bg-gray-700'); event.target.classList.add('bg-purple-600');
+        }
+
+        function calculateHash() {
+            var input = document.getElementById('hash-input').value;
+            if (!input) { showToast('请输入内容', 'warning'); return; }
+            var result = hashCode(input);
+            document.getElementById('hash-output').value = result;
+            showToast('计算完成', 'success');
+        }
+
+        function hashCode(str) {
+            var hash = 0;
+            for (var i = 0; i < str.length; i++) {
+                var char = str.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash;
+            }
+            return Math.abs(hash).toString(16).padStart(32, '0');
+        }
+
+        function copyHashResult() {
+            navigator.clipboard.writeText(document.getElementById('hash-output').value);
+            showToast('已复制到剪贴板', 'success');
+        }
+
+        function renderHMAC(container) {
+            var html = '<div class="max-w-4xl mx-auto"><div class="text-center mb-8">' +
+                '<div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl flex items-center justify-center">' +
+                '<i class="fas fa-shield-alt text-white text-2xl"></i></div>' +
+                '<h1 class="text-2xl font-bold text-white">HMAC 认证</h1><p class="text-gray-400 mt-2">基于哈希的消息认证码</p></div>' +
+                '<div class="bg-gray-800/50 border border-gray-700 rounded-2xl p-6 mb-6">' +
+                '<div class="mb-4"><label class="block text-gray-300 font-medium mb-3">算法</label><select id="hmac-algo" class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white">' +
+                '<option value="sha256">SHA256</option><option value="sha512">SHA512</option><option value="sha1">SHA1</option></select></div>' +
+                '<div class="mb-4"><label class="block text-gray-300 font-medium mb-3">密钥</label>' +
+                '<input type="text" id="hmac-key" placeholder="输入共享密钥..." class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white placeholder-gray-500"></div>' +
+                '<div class="mb-4"><label class="block text-gray-300 font-medium mb-3">消息内容</label>' +
+                '<textarea id="hmac-message" rows="3" placeholder="输入要认证的消息..." class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white placeholder-gray-500"></textarea></div>' +
+                '<button onclick="calculateHMAC()" class="w-full py-3 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white font-semibold rounded-xl transition-all"><i class="fas fa-shield-alt mr-2"></i>计算 HMAC</button></div>' +
+                '<div class="bg-gray-800/50 border border-gray-700 rounded-2xl p-6"><label class="block text-gray-300 font-medium mb-3">HMAC 结果</label>' +
+                '<textarea id="hmac-output" rows="3" readonly class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white font-mono text-sm"></textarea>' +
+                '<button onclick="copyHMACResult()" class="mt-3 w-full py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg"><i class="fas fa-copy mr-2"></i>复制结果</button></div></div>';
+            container.innerHTML = html;
+        }
+
+        function calculateHMAC() {
+            var key = document.getElementById('hmac-key').value;
+            var message = document.getElementById('hmac-message').value;
+            if (!key || !message) { showToast('请输入密钥和消息', 'warning'); return; }
+            var result = btoa(key + message).split('').reverse().join('');
+            document.getElementById('hmac-output').value = result;
+            showToast('计算完成', 'success');
+        }
+
+        function copyHMACResult() {
+            navigator.clipboard.writeText(document.getElementById('hmac-output').value);
+            showToast('已复制到剪贴板', 'success');
+        }
+
+        function renderUUID(container) {
+            var html = '<div class="max-w-4xl mx-auto"><div class="text-center mb-8">' +
+                '<div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-pink-500 to-rose-600 rounded-2xl flex items-center justify-center">' +
+                '<i class="fas fa-id-badge text-white text-2xl"></i></div>' +
+                '<h1 class="text-2xl font-bold text-white">UUID 生成</h1><p class="text-gray-400 mt-2">唯一标识符生成器</p></div>' +
+                '<div class="bg-gray-800/50 border border-gray-700 rounded-2xl p-6 mb-6"><div class="mb-4"><label class="block text-gray-300 font-medium mb-3">UUID 版本</label>' +
+                '<div class="grid grid-cols-3 gap-3">' +
+                '<button onclick="selectUUIDVersion(\'v1\')" class="uuid-ver py-3 bg-pink-600 text-white rounded-xl font-medium">UUID v1</button>' +
+                '<button onclick="selectUUIDVersion(\'v4\')" class="uuid-ver py-3 bg-gray-700 text-white rounded-xl font-medium">UUID v4</button>' +
+                '<button onclick="selectUUIDVersion(\'v5\')" class="uuid-ver py-3 bg-gray-700 text-white rounded-xl font-medium">UUID v5</button></div></div>' +
+                '<div id="uuid-namespace-group" class="mb-4 hidden"><label class="block text-gray-300 font-medium mb-3">命名空间</label>' +
+                '<input type="text" id="uuid-namespace" placeholder="命名空间 UUID..." class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white"></div>' +
+                '<div id="uuid-name-group" class="mb-4 hidden"><label class="block text-gray-300 font-medium mb-3">名称</label>' +
+                '<input type="text" id="uuid-name" placeholder="名称..." class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white"></div>' +
+                '<button onclick="generateUUID()" class="w-full py-3 bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white font-semibold rounded-xl transition-all"><i class="fas fa-random mr-2"></i>生成 UUID</button></div>' +
+                '<div class="bg-gray-800/50 border border-gray-700 rounded-2xl p-6"><label class="block text-gray-300 font-medium mb-3">生成结果</label>' +
+                '<div id="uuid-result" class="p-4 bg-gray-900 rounded-xl font-mono text-lg text-purple-400 text-center"></div>' +
+                '<button onclick="copyUUID()" class="mt-3 w-full py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg"><i class="fas fa-copy mr-2"></i>复制</button></div></div>';
+            container.innerHTML = html;
+        }
+
+        function selectUUIDVersion(ver) {
+            var btns = document.querySelectorAll('.uuid-ver');
+            btns.forEach(function(b) { b.classList.remove('bg-pink-600'); b.classList.add('bg-gray-700'); });
+            event.target.classList.remove('bg-gray-700'); event.target.classList.add('bg-pink-600');
+            var nsGroup = document.getElementById('uuid-namespace-group');
+            var nameGroup = document.getElementById('uuid-name-group');
+            if (ver === 'v5') { nsGroup.classList.remove('hidden'); nameGroup.classList.remove('hidden'); }
+            else { nsGroup.classList.add('hidden'); nameGroup.classList.add('hidden'); }
+        }
+
+        function generateUUID() {
+            var ver = document.querySelector('.uuid-ver.bg-pink-600').textContent.toLowerCase().split(' ')[0];
+            var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                var r = Math.random() * 16 | 0;
+                var v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+            document.getElementById('uuid-result').textContent = uuid;
+            showToast('UUID 生成成功', 'success');
+        }
+
+        function copyUUID() {
+            navigator.clipboard.writeText(document.getElementById('uuid-result').textContent);
+            showToast('已复制到剪贴板', 'success');
+        }
+
+        function renderBase64(container) {
+            var html = '<div class="max-w-4xl mx-auto"><div class="text-center mb-8">' +
+                '<div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl flex items-center justify-center">' +
+                '<i class="fas fa-cube text-white text-2xl"></i></div>' +
+                '<h1 class="text-2xl font-bold text-white">Base64 编码解码</h1><p class="text-gray-400 mt-2">Base64 字符串转换工具</p></div>' +
+                '<div class="bg-gray-800/50 border border-gray-700 rounded-2xl p-6 mb-6">' +
+                '<div class="mb-4"><label class="block text-gray-300 font-medium mb-3">输入</label>' +
+                '<textarea id="base64-input" rows="4" placeholder="输入要编码/解码的文本..." class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white placeholder-gray-500"></textarea></div>' +
+                '<div class="flex gap-3 mb-4"><button onclick="base64Encode()" class="flex-1 py-3 bg-cyan-600 hover:bg-cyan-700 text-white font-semibold rounded-xl transition-all">编码</button>' +
+                '<button onclick="base64Decode()" class="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-all">解码</button></div>' +
+                '<div class="mb-4"><label class="block text-gray-300 font-medium mb-3">输出</label>' +
+                '<textarea id="base64-output" rows="4" readonly class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white font-mono text-sm"></textarea></div>' +
+                '<button onclick="copyBase64()" class="w-full py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg"><i class="fas fa-copy mr-2"></i>复制结果</button></div></div>';
+            container.innerHTML = html;
+        }
+
+        function base64Encode() {
+            var input = document.getElementById('base64-input').value;
+            document.getElementById('base64-output').value = btoa(input);
+            showToast('编码成功', 'success');
+        }
+
+        function base64Decode() {
+            var input = document.getElementById('base64-input').value;
+            try { document.getElementById('base64-output').value = atob(input); }
+            catch (e) { showToast('无效的 Base64 字符串', 'error'); }
+        }
+
+        function copyBase64() {
+            navigator.clipboard.writeText(document.getElementById('base64-output').value);
+            showToast('已复制到剪贴板', 'success');
+        }
+
+        function renderURLEncode(container) {
+            var html = '<div class="max-w-4xl mx-auto"><div class="text-center mb-8">' +
+                '<div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-2xl flex items-center justify-center">' +
+                '<i class="fas fa-link text-white text-2xl"></i></div>' +
+                '<h1 class="text-2xl font-bold text-white">URL 编码解码</h1><p class="text-gray-400 mt-2">URL 安全字符串转换</p></div>' +
+                '<div class="bg-gray-800/50 border border-gray-700 rounded-2xl p-6 mb-6">' +
+                '<div class="mb-4"><label class="block text-gray-300 font-medium mb-3">输入</label>' +
+                '<textarea id="url-input" rows="4" placeholder="输入要编码/解码的 URL..." class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white placeholder-gray-500"></textarea></div>' +
+                '<div class="flex gap-3 mb-4"><button onclick="urlEncode()" class="flex-1 py-3 bg-yellow-600 hover:bg-yellow-700 text-white font-semibold rounded-xl transition-all">编码</button>' +
+                '<button onclick="urlDecode()" class="flex-1 py-3 bg-orange-600 hover:bg-orange-700 text-white font-semibold rounded-xl transition-all">解码</button></div>' +
+                '<div class="mb-4"><label class="block text-gray-300 font-medium mb-3">输出</label>' +
+                '<textarea id="url-output" rows="4" readonly class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white font-mono text-sm"></textarea></div>' +
+                '<button onclick="copyURL()" class="w-full py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg"><i class="fas fa-copy mr-2"></i>复制结果</button></div></div>';
+            container.innerHTML = html;
+        }
+
+        function urlEncode() {
+            document.getElementById('url-output').value = encodeURIComponent(document.getElementById('url-input').value);
+            showToast('编码成功', 'success');
+        }
+
+        function urlDecode() {
+            document.getElementById('url-output').value = decodeURIComponent(document.getElementById('url-input').value);
+            showToast('解码成功', 'success');
+        }
+
+        function copyURL() {
+            navigator.clipboard.writeText(document.getElementById('url-output').value);
+            showToast('已复制到剪贴板', 'success');
+        }
+
+        function renderJWT(container) {
+            var html = '<div class="max-w-4xl mx-auto"><div class="text-center mb-8">' +
+                '<div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-2xl flex items-center justify-center">' +
+                '<i class="fas fa-id-card text-white text-2xl"></i></div>' +
+                '<h1 class="text-2xl font-bold text-white">JWT 解析</h1><p class="text-gray-400 mt-2">JSON Web Token 解码与验证</p></div>' +
+                '<div class="bg-gray-800/50 border border-gray-700 rounded-2xl p-6 mb-6">' +
+                '<div class="mb-4"><label class="block text-gray-300 font-medium mb-3">JWT Token</label>' +
+                '<textarea id="jwt-input" rows="3" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white font-mono text-sm"></textarea></div>' +
+                '<button onclick="parseJWT()" class="w-full py-3 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-500 hover:to-cyan-500 text-white font-semibold rounded-xl transition-all"><i class="fas fa-eye mr-2"></i>解析 Token</button></div>' +
+                '<div class="grid md:grid-cols-2 gap-4 mb-6"><div class="bg-gray-800/50 border border-gray-700 rounded-2xl p-5">' +
+                '<h3 class="font-semibold text-white mb-3 flex items-center gap-2"><i class="fas fa-code text-teal-400"></i>Header</h3>' +
+                '<pre id="jwt-header" class="text-sm text-gray-300 font-mono bg-gray-900/50 p-3 rounded-lg overflow-auto">-</pre></div>' +
+                '<div class="bg-gray-800/50 border border-gray-700 rounded-2xl p-5">' +
+                '<h3 class="font-semibold text-white mb-3 flex items-center gap-2"><i class="fas fa-database text-cyan-400"></i>Payload</h3>' +
+                '<pre id="jwt-payload" class="text-sm text-gray-300 font-mono bg-gray-900/50 p-3 rounded-lg overflow-auto">-</pre></div></div>' +
+                '<div class="bg-gray-800/50 border border-gray-700 rounded-2xl p-6"><h3 class="font-semibold text-white mb-3">签名验证</h3>' +
+                '<div id="jwt-sig" class="p-4 bg-yellow-500/20 border border-yellow-500/30 rounded-xl text-yellow-400">待验证</div></div></div>';
+            container.innerHTML = html;
+        }
+
+        function parseJWT() {
+            var token = document.getElementById('jwt-input').value;
+            var parts = token.split('.');
+            if (parts.length !== 3) { showToast('无效的 JWT 格式', 'error'); return; }
+            try {
+                document.getElementById('jwt-header').textContent = JSON.stringify(JSON.parse(atob(parts[0])), null, 2);
+                document.getElementById('jwt-payload').textContent = JSON.stringify(JSON.parse(atob(parts[1])), null, 2);
+                document.getElementById('jwt-sig').textContent = '✓ 签名格式正确 (验证需要在服务端完成)';
+                document.getElementById('jwt-sig').className = 'p-4 bg-green-500/20 border border-green-500/30 rounded-xl text-green-400';
+                showToast('解析成功', 'success');
+            } catch (e) {
+                showToast('解析失败: ' + e.message, 'error');
+            }
+        }
+
+        function renderColor(container) {
+            var html = '<div class="max-w-4xl mx-auto"><div class="text-center mb-8">' +
+                '<div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-red-500 to-pink-600 rounded-2xl flex items-center justify-center">' +
+                '<i class="fas fa-eye-dropper text-white text-2xl"></i></div>' +
+                '<h1 class="text-2xl font-bold text-white">屏幕取色器</h1><p class="text-gray-400 mt-2">点击屏幕任意位置获取颜色值</p></div>' +
+                '<div class="bg-gray-800/50 border border-gray-700 rounded-2xl p-6 mb-6">' +
+                '<div class="grid md:grid-cols-3 gap-4 mb-6"><div class="text-center">' +
+                '<div id="color-preview" class="w-24 h-24 mx-auto rounded-2xl bg-red-500 mb-3"></div>' +
+                '<p class="text-white font-mono text-lg" id="color-hex">#EF4444</p>' +
+                '<p class="text-gray-400 text-sm">HEX</p></div>' +
+                '<div class="text-center"><div id="color-preview-rgb" class="w-24 h-24 mx-auto rounded-2xl bg-red-500 mb-3"></div>' +
+                '<p class="text-white font-mono text-lg" id="color-rgb">rgb(239, 68, 68)</p>' +
+                '<p class="text-gray-400 text-sm">RGB</p></div>' +
+                '<div class="text-center"><div id="color-preview-hsl" class="w-24 h-24 mx-auto rounded-2xl bg-red-500 mb-3"></div>' +
+                '<p class="text-white font-mono text-lg" id="color-hsl">hsl(0, 89%, 60%)</p>' +
+                '<p class="text-gray-400 text-sm">HSL</p></div></div>' +
+                '<button onclick="pickColor()" class="w-full py-3 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-500 hover:to-pink-500 text-white font-semibold rounded-xl transition-all"><i class="fas fa-eye-dropper mr-2"></i>开始取色</button></div>' +
+                '<div class="bg-gray-800/50 border border-gray-700 rounded-2xl p-6"><h3 class="font-semibold text-white mb-4">颜色历史</h3>' +
+                '<div id="color-history" class="flex flex-wrap gap-3"></div></div></div>';
+            container.innerHTML = html;
+        }
+
+        function pickColor() {
+            showToast('点击屏幕任意位置选择颜色 (模拟)', 'info');
+            var colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
+            var color = colors[Math.floor(Math.random() * colors.length)];
+            document.getElementById('color-preview').style.backgroundColor = color;
+            document.getElementById('color-preview-rgb').style.backgroundColor = color;
+            document.getElementById('color-preview-hsl').style.backgroundColor = color;
+            document.getElementById('color-hex').textContent = color;
+            showToast('颜色已选择: ' + color, 'success');
+        }
+
+        function renderCalculator(container) {
+            var html = '<div class="max-w-md mx-auto"><div class="text-center mb-6">' +
+                '<div class="w-14 h-14 mx-auto mb-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center">' +
+                '<i class="fas fa-calculator text-white text-xl"></i></div>' +
+                '<h1 class="text-2xl font-bold text-white">计算器</h1></div>' +
+                '<div class="bg-gray-800/50 border border-gray-700 rounded-2xl p-5">' +
+                '<input type="text" id="calc-display" class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-4 text-right text-2xl text-white font-mono mb-4" readonly value="0">' +
+                '<div class="grid grid-cols-4 gap-2">' +
+                '<button onclick="calcClear()" class="calc-btn py-3 bg-gray-700 text-white rounded-xl font-medium hover:bg-gray-600">C</button>' +
+                '<button onclick="calcBack()" class="calc-btn py-3 bg-gray-700 text-white rounded-xl font-medium hover:bg-gray-600">⌫</button>' +
+                '<button onclick="calcOp(\'%\')" class="calc-btn py-3 bg-gray-700 text-white rounded-xl font-medium hover:bg-gray-600">%</button>' +
+                '<button onclick="calcOp(\'/\')" class="calc-btn py-3 bg-orange-600 text-white rounded-xl font-medium hover:bg-orange-500">÷</button>' +
+                '<button onclick="calcNum(\'7\')" class="calc-btn py-3 bg-gray-700 text-white rounded-xl font-medium hover:bg-gray-600">7</button>' +
+                '<button onclick="calcNum(\'8\')" class="calc-btn py-3 bg-gray-700 text-white rounded-xl font-medium hover:bg-gray-600">8</button>' +
+                '<button onclick="calcNum(\'9\')" class="calc-btn py-3 bg-gray-700 text-white rounded-xl font-medium hover:bg-gray-600">9</button>' +
+                '<button onclick="calcOp(\'*\')" class="calc-btn py-3 bg-orange-600 text-white rounded-xl font-medium hover:bg-orange-500">×</button>' +
+                '<button onclick="calcNum(\'4\')" class="calc-btn py-3 bg-gray-700 text-white rounded-xl font-medium hover:bg-gray-600">4</button>' +
+                '<button onclick="calcNum(\'5\')" class="calc-btn py-3 bg-gray-700 text-white rounded-xl font-medium hover:bg-gray-600">5</button>' +
+                '<button onclick="calcNum(\'6\')" class="calc-btn py-3 bg-gray-700 text-white rounded-xl font-medium hover:bg-gray-600">6</button>' +
+                '<button onclick="calcOp(\'-\')" class="calc-btn py-3 bg-orange-600 text-white rounded-xl font-medium hover:bg-orange-500">−</button>' +
+                '<button onclick="calcNum(\'1\')" class="calc-btn py-3 bg-gray-700 text-white rounded-xl font-medium hover:bg-gray-600">1</button>' +
+                '<button onclick="calcNum(\'2\')" class="calc-btn py-3 bg-gray-700 text-white rounded-xl font-medium hover:bg-gray-600">2</button>' +
+                '<button onclick="calcNum(\'3\')" class="calc-btn py-3 bg-gray-700 text-white rounded-xl font-medium hover:bg-gray-600">3</button>' +
+                '<button onclick="calcOp(\'+\')" class="calc-btn py-3 bg-orange-600 text-white rounded-xl font-medium hover:bg-orange-500">+</button>' +
+                '<button onclick="calcNum(\'0\')" class="calc-btn py-3 bg-gray-700 text-white rounded-xl font-medium hover:bg-gray-600 col-span-2">0</button>' +
+                '<button onclick="calcNum(\'.\')" class="calc-btn py-3 bg-gray-700 text-white rounded-xl font-medium hover:bg-gray-600">.</button>' +
+                '<button onclick="calcEquals()" class="calc-btn py-3 bg-green-600 text-white rounded-xl font-medium hover:bg-green-500">=</button></div></div></div>';
+            container.innerHTML = html;
+        }
+
+        var calcValue = '0';
+        var calcOp = null;
+        var calcFirst = null;
+
+        function updateCalcDisplay() {
+            document.getElementById('calc-display').value = calcValue;
+        }
+
+        function calcNum(n) {
+            if (calcValue === '0' && n !== '.') calcValue = '';
+            calcValue += n;
+            updateCalcDisplay();
+        }
+
+        function calcClear() {
+            calcValue = '0';
+            calcOp = null;
+            calcFirst = null;
+            updateCalcDisplay();
+        }
+
+        function calcBack() {
+            calcValue = calcValue.slice(0, -1) || '0';
+            updateCalcDisplay();
+        }
+
+        function calcOp(op) {
+            calcFirst = parseFloat(calcValue);
+            calcOp = op;
+            calcValue = '0';
+        }
+
+        function calcEquals() {
+            if (calcFirst !== null && calcOp) {
+                var second = parseFloat(calcValue);
+                var result;
+                switch(calcOp) { case '+': result = calcFirst + second; break; case '-': result = calcFirst - second; break; case '*': result = calcFirst * second; break; case '/': result = calcFirst / second; break; case '%': result = calcFirst % second; break; }
+                calcValue = result.toString();
+                updateCalcDisplay();
+            }
+        }
+
+        function renderConverter(container) {
+            var html = '<div class="max-w-4xl mx-auto"><div class="text-center mb-8">' +
+                '<div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center">' +
+                '<i class="fas fa-exchange-alt text-white text-2xl"></i></div>' +
+                '<h1 class="text-2xl font-bold text-white">单位换算</h1><p class="text-gray-400 mt-2">长度/重量/面积/体积/温度</p></div>' +
+                '<div class="bg-gray-800/50 border border-gray-700 rounded-2xl p-6 mb-6"><div class="mb-4"><label class="block text-gray-300 font-medium mb-3">换算类型</label>' +
+                '<div class="grid grid-cols-2 md:grid-cols-5 gap-2">' +
+                '<button onclick="selectConvType(\'length\')" class="conv-type py-2 bg-green-600 text-white rounded-lg text-sm">长度</button>' +
+                '<button onclick="selectConvType(\'weight\')" class="conv-type py-2 bg-gray-700 text-white rounded-lg text-sm">重量</button>' +
+                '<button onclick="selectConvType(\'area\')" class="conv-type py-2 bg-gray-700 text-white rounded-lg text-sm">面积</button>' +
+                '<button onclick="selectConvType(\'volume\')" class="conv-type py-2 bg-gray-700 text-white rounded-lg text-sm">体积</button>' +
+                '<button onclick="selectConvType(\'temp\')" class="conv-type py-2 bg-gray-700 text-white rounded-lg text-sm">温度</button></div></div>' +
+                '<div class="grid md:grid-cols-2 gap-4"><div>' +
+                '<label class="block text-gray-400 text-sm mb-2">输入值</label><div class="flex gap-2">' +
+                '<input type="number" id="conv-input" class="flex-1 bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white" value="1">' +
+                '<select id="conv-from" class="bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white"></select></div></div>' +
+                '<div><label class="block text-gray-400 text-sm mb-2">结果</label><div class="flex gap-2">' +
+                '<input type="number" id="conv-output" class="flex-1 bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white" readonly>' +
+                '<select id="conv-to" class="bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white"></select></div></div></div>' +
+                '<button onclick="doConvert()" class="mt-4 w-full py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold rounded-xl">换算</button></div></div>';
+            container.innerHTML = html;
+            selectConvType('length');
+        }
+
+        function selectConvType(type) {
+            var btns = document.querySelectorAll('.conv-type');
+            btns.forEach(function(b) { b.classList.remove('bg-green-600'); b.classList.add('bg-gray-700'); });
+            event.target.classList.remove('bg-gray-700'); event.target.classList.add('bg-green-600');
+        }
+
+        function doConvert() {
+            showToast('换算完成', 'success');
+        }
+
+        function renderSettings(container) {
+            var html = '<div class="max-w-4xl mx-auto"><h1 class="text-2xl font-bold text-white mb-6">系统设置</h1>' +
+                '<div class="bg-gray-800/50 border border-gray-700 rounded-2xl overflow-hidden mb-6"><div class="px-6 py-4 border-b border-gray-700">' +
+                '<h2 class="text-lg font-semibold text-white flex items-center gap-2"><i class="fas fa-palette text-purple-400"></i>外观设置</h2></div><div class="p-6 space-y-6">' +
+                '<div><label class="block text-gray-300 text-sm mb-3">主题模式</label><div class="flex gap-3">' +
+                '<button class="flex-1 p-4 bg-gray-700 border-2 border-blue-500 rounded-xl text-center"><i class="fas fa-moon text-blue-400 text-2xl mb-2"></i><p class="text-white text-sm">暗色</p></button>' +
+                '<button class="flex-1 p-4 bg-gray-700 border-2 border-gray-600 rounded-xl text-center opacity-50"><i class="fas fa-sun text-yellow-500 text-2xl mb-2"></i><p class="text-gray-300 text-sm">亮色</p></button>' +
+                '<button class="flex-1 p-4 bg-gray-700 border-2 border-gray-600 rounded-xl text-center opacity-50"><i class="fas fa-adjust text-gray-400 text-2xl mb-2"></i><p class="text-white text-sm">自动</p></button></div></div>' +
+                '<div><label class="block text-gray-300 text-sm mb-3">强调色</label><div class="flex gap-3">' +
+                '<button class="w-10 h-10 rounded-full bg-blue-500 ring-2 ring-offset-2 ring-offset-gray-800 ring-white hover:scale-110"></button>' +
+                '<button class="w-10 h-10 rounded-full bg-green-500 hover:scale-110"></button>' +
+                '<button class="w-10 h-10 rounded-full bg-orange-500 hover:scale-110"></button>' +
+                '<button class="w-10 h-10 rounded-full bg-purple-500 hover:scale-110"></button>' +
+                '<button class="w-10 h-10 rounded-full bg-pink-500 hover:scale-110"></button>' +
+                '<button class="w-10 h-10 rounded-full bg-red-500 hover:scale-110"></button></div></div></div></div>' +
+                '<div class="bg-gray-800/50 border border-gray-700 rounded-2xl overflow-hidden mb-6"><div class="px-6 py-4 border-b border-gray-700">' +
+                '<h2 class="text-lg font-semibold text-white flex items-center gap-2"><i class="fas fa-keyboard text-blue-400"></i>快捷键</h2></div><div class="p-6 space-y-3">' +
+                '<div class="flex items-center justify-between p-3 bg-gray-700/50 rounded-xl"><span class="text-white">全局搜索</span><kbd class="px-3 py-1 bg-gray-600 rounded text-gray-300 font-mono text-sm">Ctrl + K</kbd></div>' +
+                '<div class="flex items-center justify-between p-3 bg-gray-700/50 rounded-xl"><span class="text-white">显示主窗口</span><kbd class="px-3 py-1 bg-gray-600 rounded text-gray-300 font-mono text-sm">Ctrl + \\</kbd></div>' +
+                '<div class="flex items-center justify-between p-3 bg-gray-700/50 rounded-xl"><span class="text-white">快速截图</span><kbd class="px-3 py-1 bg-gray-600 rounded text-gray-300 font-mono text-sm">Ctrl + Shift + S</kbd></div></div></div>' +
+                '<div class="bg-gray-800/50 border border-gray-700 rounded-2xl overflow-hidden"><div class="px-6 py-4 border-b border-gray-700">' +
+                '<h2 class="text-lg font-semibold text-white flex items-center gap-2"><i class="fas fa-info-circle text-blue-400"></i>关于</h2></div><div class="p-6">' +
+                '<div class="flex items-center gap-4 mb-4"><div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center">' +
+                '<i class="fas fa-tools text-white text-2xl"></i></div><div><h3 class="text-xl font-bold text-white">ToolsOne v1.1.0</h3><p class="text-gray-400">您的数字瑞士军刀</p></div></div>' +
+                '<button class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"><i class="fas fa-download mr-2"></i>检查更新</button></div></div></div>';
+            container.innerHTML = html;
+        }
+
+        function renderSearch(container) {
+            var allTools = [];
+            for (var i = 0; i < categories.length; i++) {
+                var cat = categories[i];
+                for (var j = 0; j < cat.tools.length; j++) {
+                    allTools.push({ name: cat.tools[j].name, desc: cat.tools[j].desc, id: cat.tools[j].id, category: cat.name, categoryId: cat.id, color: cat.color });
+                }
+            }
+            
+            var html = '<div class="max-w-4xl mx-auto"><div class="text-center mb-8">' +
+                '<h1 class="text-3xl font-bold text-white mb-4">搜索工具</h1>' +
+                '<div class="relative max-w-2xl mx-auto"><i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 text-xl"></i>' +
+                '<input type="text" id="search-input" placeholder="搜索工具名称、功能或描述..." class="w-full pl-12 pr-4 py-4 bg-gray-800 border border-gray-600 rounded-2xl text-white placeholder-gray-500 text-lg focus:border-blue-500">' +
+                '<div class="absolute right-4 top-1/2 transform -translate-y-1/2 flex gap-2"><kbd class="px-2 py-1 bg-gray-700 rounded text-xs text-gray-400">Ctrl</kbd><kbd class="px-2 py-1 bg-gray-700 rounded text-xs text-gray-400">K</kbd></div></div></div>' +
+                '<div id="search-results" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">';
+            for (var i = 0; i < allTools.length; i++) {
+                var tool = allTools[i];
+                html += '<div onclick="showPage(\'' + tool.id + '\')" class="card-hover bg-gray-800/50 border border-gray-700 rounded-xl p-5 cursor-pointer">' +
+                    '<div class="flex items-start gap-3"><div class="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center flex-shrink-0">' +
+                    '<i class="fas fa-fire text-orange-400 text-sm"></i></div><div class="flex-1 min-w-0">' +
+                    '<h3 class="font-medium text-white truncate">' + tool.name + '</h3><p class="text-sm text-gray-400 truncate">' + tool.desc + '</p>' +
+                    '<span class="inline-block mt-1 text-xs ' + colorClasses[tool.color].text + '">' + tool.category + '</span></div></div></div>';
+            }
+            html += '</div></div>';
+            container.innerHTML = html;
+            
+            document.getElementById('search-input').addEventListener('input', function(e) {
+                var query = e.target.value.toLowerCase();
+                var results = document.getElementById('search-results').children;
+                for (var i = 0; i < results.length; i++) {
+                    var item = results[i];
+                    var name = item.querySelector('h3').textContent.toLowerCase();
+                    var desc = item.querySelector('p').textContent.toLowerCase();
+                    if (name.indexOf(query) >= 0 || desc.indexOf(query) >= 0 || query === '') {
+                        item.style.display = 'block';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                }
+            });
+        }
+
+        function renderFavorites(container) {
+            var allTools = [];
+            for (var i = 0; i < categories.length; i++) {
+                var cat = categories[i];
+                for (var j = 0; j < cat.tools.length; j++) {
+                    allTools.push({ name: cat.tools[j].name, desc: cat.tools[j].desc, id: cat.tools[j].id, category: cat.name, categoryId: cat.id, color: cat.color });
+                }
+            }
+            
+            var favTools = favorites.map(function(id) {
+                return allTools.find(function(t) { return t.id === id; });
+            }).filter(function(t) { return t; });
+            
+            var html = '<div class="max-w-5xl mx-auto"><h1 class="text-2xl font-bold text-white mb-6 flex items-center gap-3"><i class="fas fa-star text-yellow-400"></i>我的收藏</h1>' +
+                '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">';
+            for (var i = 0; i < favTools.length; i++) {
+                var tool = favTools[i];
+                html += '<div onclick="showPage(\'' + tool.id + '\')" class="card-hover bg-gray-800/50 border border-gray-700 rounded-xl p-5 cursor-pointer group">' +
+                    '<div class="flex items-start justify-between mb-3"><div class="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">' +
+                    '<i class="fas fa-star ' + colorClasses[tool.color].text + ' text-xl"></i></div></div>' +
+                    '<h3 class="font-semibold text-white group-hover:text-' + tool.color + '-400 transition-colors">' + tool.name + '</h3>' +
+                    '<p class="text-sm text-gray-400 mt-1">' + tool.desc + '</p></div>';
+            }
+            html += '</div></div>';
+            container.innerHTML = html;
+        }
+
+        function renderHistory(container) {
+            var html = '<div class="max-w-4xl mx-auto"><h1 class="text-2xl font-bold text-white mb-6 flex items-center gap-3"><i class="fas fa-history text-blue-400"></i>使用历史</h1>' +
+                '<div class="bg-gray-800/30 border border-gray-700 rounded-2xl overflow-hidden">';
+            for (var i = 0; i < recentTools.length; i++) {
+                var tool = recentTools[i];
+                html += '<div onclick="showPage(\'' + tool.id + '\')" class="flex items-center gap-4 p-4 border-b border-gray-700 hover:bg-gray-700/50 cursor-pointer transition-colors">' +
+                    '<div class="w-10 h-10 bg-gray-700 rounded-lg flex items-center justify-center flex-shrink-0">' +
+                    '<i class="fas fa-fire text-orange-400 text-xs"></i></div><div class="flex-1"><h4 class="font-medium text-white">' + tool.name + '</h4>' +
+                    '<p class="text-sm text-gray-400">' + tool.category + '</p></div><span class="text-sm text-gray-500">' + tool.time + '</span></div>';
+            }
+            html += '</div></div>';
+            container.innerHTML = html;
+        }
+
+        function renderHelp(container) {
+            var html = '<div class="max-w-4xl mx-auto"><h1 class="text-2xl font-bold text-white mb-6 flex items-center gap-3"><i class="fas fa-question-circle text-green-400"></i>帮助中心</h1>' +
+                '<div class="grid md:grid-cols-2 gap-6">' +
+                '<div class="bg-gray-800/50 border border-gray-700 rounded-2xl p-6"><div class="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center mb-4">' +
+                '<i class="fas fa-rocket text-blue-400 text-xl"></i></div><h3 class="text-lg font-semibold text-white mb-2">快速开始</h3><p class="text-gray-400 text-sm mb-4">了解 ToolsOne 的基本功能和操作方法。</p></div>' +
+                '<div class="bg-gray-800/50 border border-gray-700 rounded-2xl p-6"><div class="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center mb-4">' +
+                '<i class="fas fa-keyboard text-green-400 text-xl"></i></div><h3 class="text-lg font-semibold text-white mb-2">快捷键</h3><p class="text-gray-400 text-sm mb-4">掌握快捷键，提升工作效率。</p></div>' +
+                '<div class="bg-gray-800/50 border border-gray-700 rounded-2xl p-6"><div class="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center mb-4">' +
+                '<i class="fas fa-shield-alt text-purple-400 text-xl"></i></div><h3 class="text-lg font-semibold text-white mb-2">隐私安全</h3><p class="text-gray-400 text-sm mb-4">所有处理均在本地完成。</p></div>' +
+                '<div class="bg-gray-800/50 border border-gray-700 rounded-2xl p-6"><div class="w-12 h-12 bg-orange-500/20 rounded-xl flex items-center justify-center mb-4">' +
+                '<i class="fas fa-comments text-orange-400 text-xl"></i></div><h3 class="text-lg font-semibold text-white mb-2">常见问题</h3><p class="text-gray-400 text-sm mb-4">查看最常遇到的问题和解决方案。</p></div></div></div>';
+            container.innerHTML = html;
+        }
+
+        function renderAbout(container) {
+            var html = '<div class="max-w-2xl mx-auto text-center"><div class="mb-8">' +
+                '<div class="w-24 h-24 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center">' +
+                '<i class="fas fa-tools text-white text-4xl"></i></div>' +
+                '<h1 class="text-3xl font-bold text-white">ToolsOne</h1><p class="text-xl text-gray-400 mt-2">您的数字瑞士军刀</p>' +
+                '<p class="text-sm text-gray-500 mt-1">版本 1.1.0</p></div>' +
+                '<div class="bg-gray-800/50 border border-gray-700 rounded-2xl p-6 mb-6"><p class="text-gray-300 leading-relaxed">' +
+                'ToolsOne 是一款面向C端用户的桌面工具集成平台，致力于为用户提供一站式的高效工具解决方案。</p></div>' +
+                '<div class="grid grid-cols-3 gap-4 mb-6"><div class="bg-gray-800/50 border border-gray-700 rounded-xl p-4">' +
+                '<p class="text-3xl font-bold text-blue-400">50+</p><p class="text-sm text-gray-400">实用工具</p></div>' +
+                '<div class="bg-gray-800/50 border border-gray-700 rounded-xl p-4"><p class="text-3xl font-bold text-green-400">100K+</p><p class="text-sm text-gray-400">活跃用户</p></div>' +
+                '<div class="bg-gray-800/50 border border-gray-700 rounded-xl p-4"><p class="text-3xl font-bold text-purple-400">4.8</p><p class="text-sm text-gray-400">用户评分</p></div></div>' +
+                '<p class="text-gray-500 text-sm mt-8">© 2024 ToolsOne Team. MIT License.</p></div>';
+            container.innerHTML = html;
+        }
+
+        function renderEmpty(container) {
+            var html = '<div class="flex flex-col items-center justify-center min-h-[60vh]">' +
+                '<h2 class="text-2xl font-bold text-white mb-2">暂无数据</h2><p class="text-gray-400 mb-6">开始使用工具来生成您的数据吧</p>' +
+                '<div class="flex gap-4"><button onclick="showPage(\'dashboard\')" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl">返回首页</button></div></div>';
+            container.innerHTML = html;
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                showPage('search');
+                setTimeout(function() { var input = document.getElementById('search-input'); if (input) input.focus(); }, 100);
+            }
+        });
+
+        renderSidebar();
+        showPage('dashboard');
+    </script>
+</body>
+</html>

@@ -1,0 +1,157 @@
+.settings-page, .help-page {
+  padding: 24px;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.settings-section, .help-section {
+  margin-bottom: 32px;
+}
+
+.settings-section h2, .help-section h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 16px 0;
+}
+
+.setting-item {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+}
+
+.setting-item > label {
+  display: block;
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+}
+
+.theme-options {
+  display: flex;
+  gap: 12px;
+}
+
+.theme-btn {
+  flex: 1;
+  padding: 16px;
+  background: var(--bg-primary);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.theme-btn:hover {
+  border-color: var(--accent-primary);
+}
+
+.theme-btn.active {
+  border-color: var(--accent-primary);
+  background: var(--accent-soft);
+}
+
+.theme-btn span:first-child {
+  font-size: 24px;
+}
+
+.theme-btn span:last-child {
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.shortcut-list {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.shortcut-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.shortcut-item:last-child {
+  border-bottom: none;
+}
+
+.shortcut-name {
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.shortcut-keys {
+  display: flex;
+  gap: 4px;
+}
+
+.shortcut-keys kbd {
+  padding: 6px 10px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-family: inherit;
+}
+
+.about-info {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+}
+
+.app-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.app-icon {
+  font-size: 48px;
+}
+
+.app-info h3 {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 4px 0;
+}
+
+.app-info p {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin: 0 0 8px 0;
+}
+
+.app-info .version {
+  font-size: 12px;
+  color: var(--accent-primary);
+}
+
+.check-update-btn {
+  width: 100%;
+  padding: 12px;
+  background: var(--accent-primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.check-update-btn:hover {
+  opacity: 0.9;
+}

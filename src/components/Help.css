@@ -1,0 +1,84 @@
+.help-section {
+  margin-bottom: 32px;
+}
+
+.help-section h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 16px 0;
+}
+
+.faq-list {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.faq-item {
+  border-bottom: 1px solid var(--border-color);
+}
+
+.faq-item:last-child {
+  border-bottom: none;
+}
+
+.faq-item summary {
+  padding: 16px 20px;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--text-primary);
+  list-style: none;
+}
+
+.faq-item summary::-webkit-details-marker {
+  display: none;
+}
+
+.faq-item summary::before {
+  content: '▶';
+  margin-right: 12px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.faq-item[open] summary::before {
+  content: '▼';
+}
+
+.faq-item p {
+  padding: 0 20px 16px 44px;
+  font-size: 14px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.contact-info {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+}
+
+.contact-info p {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin: 0 0 16px 0;
+}
+
+.github-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: var(--accent-primary);
+  color: white;
+  text-decoration: none;
+  border-radius: var(--radius-lg);
+  font-size: 14px;
+}
+
+.github-link:hover {
+  opacity: 0.9;
+}

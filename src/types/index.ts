@@ -6,4 +6,14 @@ export interface Tool {
   description: string
   icon: string
   component: FC
+  categoryId?: string
+  hot?: boolean
+}
+
+export interface Category {
+  id: string
+  name: string
+  icon: string
+  color: string
+  tools: Tool[]
 }
