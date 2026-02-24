@@ -1,32 +1,61 @@
-.settings-page, .help-page {
-  padding: 24px;
+.settings-page {
+  padding: 32px;
+  max-width: 700px;
+  margin: 0 auto;
   height: 100%;
   overflow-y: auto;
+  background: var(--bg-primary);
 }
 
-.settings-section, .help-section {
+.settings-header {
   margin-bottom: 32px;
 }
 
-.settings-section h2, .help-section h2 {
-  font-size: 18px;
+.settings-header h1 {
+  font-size: 24px;
   font-weight: 600;
   color: var(--text-primary);
-  margin: 0 0 16px 0;
+  margin: 0 0 8px 0;
 }
 
-.setting-item {
+.settings-header p {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.settings-section {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
-  padding: 20px;
+  padding: 24px;
+  margin-bottom: 24px;
 }
 
-.setting-item > label {
+.settings-section h2 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 20px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.setting-item {
+  margin-bottom: 20px;
+}
+
+.setting-item:last-child {
+  margin-bottom: 0;
+}
+
+.setting-item label {
   display: block;
   font-size: 14px;
-  color: var(--text-secondary);
-  margin-bottom: 16px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 12px;
 }
 
 .theme-options {
@@ -39,7 +68,8 @@
   padding: 16px;
   background: var(--bg-primary);
   border: 2px solid var(--border-color);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
   cursor: pointer;
   display: flex;
   flex-direction: column;
@@ -55,6 +85,7 @@
 .theme-btn.active {
   border-color: var(--accent-primary);
   background: var(--accent-soft);
+  color: var(--accent-primary);
 }
 
 .theme-btn span:first-child {
@@ -63,13 +94,13 @@
 
 .theme-btn span:last-child {
   font-size: 14px;
-  color: var(--text-primary);
+  font-weight: 500;
 }
 
 .shortcut-list {
-  background: var(--bg-secondary);
+  background: var(--bg-primary);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   overflow: hidden;
 }
 
@@ -97,7 +128,7 @@
 
 .shortcut-keys kbd {
   padding: 6px 10px;
-  background: var(--bg-primary);
+  background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
   font-size: 12px;
@@ -106,9 +137,9 @@
 }
 
 .about-info {
-  background: var(--bg-secondary);
+  background: var(--bg-primary);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   padding: 20px;
 }
 
@@ -145,11 +176,13 @@
   width: 100%;
   padding: 12px;
   background: var(--accent-primary);
-  color: white;
   border: none;
-  border-radius: var(--radius-lg);
-  cursor: pointer;
+  border-radius: var(--radius-md);
+  color: white;
   font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
 }
 
 .check-update-btn:hover {

@@ -1,0 +1,80 @@
+.mode-selector {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.mode-btn {
+  flex: 1;
+  padding: 12px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mode-btn:hover {
+  border-color: var(--accent-primary);
+}
+
+.mode-btn.active {
+  background: var(--accent-soft);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
+
+.copy-link {
+  float: right;
+  background: none;
+  border: none;
+  color: var(--accent-primary);
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.copy-link:hover {
+  text-decoration: underline;
+}
+
+.escape-reference {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border-color);
+}
+
+.escape-reference h4 {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin: 0 0 12px 0;
+}
+
+.escape-reference table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.escape-reference th,
+.escape-reference td {
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.escape-reference th {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.escape-reference td {
+  color: var(--text-secondary);
+  font-family: monospace;
+}
+
+.escape-reference td:first-child {
+  color: var(--accent-primary);
+}

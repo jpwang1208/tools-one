@@ -1,0 +1,166 @@
+.bmi-tool {
+  padding: 24px;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.bmi-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.bmi-header h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text-primary, #f3f4f6);
+  margin: 0 0 8px 0;
+}
+
+.bmi-header p {
+  font-size: 14px;
+  color: var(--text-muted, #9ca3af);
+  margin: 0;
+}
+
+.bmi-content {
+  background: var(--bg-secondary, #1f2937);
+  border: 1px solid var(--border-color, #374151);
+  border-radius: 16px;
+  padding: 24px;
+}
+
+.input-group {
+  margin-bottom: 20px;
+}
+
+.input-group label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary, #f3f4f6);
+  margin-bottom: 8px;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--bg-primary, #111827);
+  border: 1px solid var(--border-color, #374151);
+  border-radius: 10px;
+  font-size: 16px;
+  color: var(--text-primary, #f3f4f6);
+}
+
+.input-group input:focus {
+  outline: none;
+  border-color: var(--accent-primary, #3b82f6);
+}
+
+.input-group input::placeholder {
+  color: var(--text-muted, #9ca3af);
+}
+
+.calculate-btn {
+  width: 100%;
+  padding: 16px;
+  background: var(--accent-primary, #3b82f6);
+  border: none;
+  border-radius: 10px;
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+  margin-bottom: 24px;
+}
+
+.calculate-btn:hover {
+  opacity: 0.9;
+}
+
+.result-card {
+  background: var(--bg-primary, #111827);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.bmi-value {
+  font-size: 48px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.bmi-category {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+.bmi-scale {
+  margin-top: 20px;
+}
+
+.scale-bar {
+  position: relative;
+  height: 8px;
+  background: linear-gradient(90deg, #f59e0b 0%, #10b981 33%, #f97316 66%, #ef4444 100%);
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+
+.scale-indicator {
+  position: absolute;
+  top: -4px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 3px solid white;
+  transform: translateX(-50%);
+  transition: left 0.3s ease;
+}
+
+.scale-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-muted, #9ca3af);
+}
+
+.reference-table {
+  background: var(--bg-primary, #111827);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.reference-table h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary, #f3f4f6);
+  margin: 0 0 16px 0;
+}
+
+.reference-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.reference-table td {
+  padding: 12px 0;
+  font-size: 14px;
+  border-bottom: 1px solid var(--border-color, #374151);
+}
+
+.reference-table td:first-child {
+  font-weight: 500;
+}
+
+.reference-table td:last-child {
+  text-align: right;
+  color: var(--text-secondary, #d1d5db);
+}
+
+.reference-table tr:last-child td {
+  border-bottom: none;
+}

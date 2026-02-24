@@ -1,0 +1,118 @@
+.calculator-tool {
+  padding: 24px;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.calculator-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.calculator-header h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text-primary, #f3f4f6);
+  margin: 0 0 8px 0;
+}
+
+.calculator-header p {
+  font-size: 14px;
+  color: var(--text-muted, #9ca3af);
+  margin: 0;
+}
+
+.calculator-container {
+  background: var(--bg-secondary, #1f2937);
+  border: 1px solid var(--border-color, #374151);
+  border-radius: 16px;
+  padding: 20px;
+}
+
+.calculator-display {
+  background: var(--bg-primary, #111827);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 16px;
+  text-align: right;
+}
+
+.display-operation {
+  font-size: 14px;
+  color: var(--text-muted, #9ca3af);
+  min-height: 20px;
+  margin-bottom: 8px;
+}
+
+.display-value {
+  font-size: 36px;
+  font-weight: 600;
+  color: var(--text-primary, #f3f4f6);
+  word-wrap: break-word;
+  word-break: break-all;
+}
+
+.calculator-buttons {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.calc-btn {
+  padding: 20px;
+  font-size: 20px;
+  font-weight: 500;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.calc-btn.number {
+  background: var(--bg-primary, #111827);
+  color: var(--text-primary, #f3f4f6);
+}
+
+.calc-btn.number:hover {
+  background: var(--bg-hover, #374151);
+}
+
+.calc-btn.operator {
+  background: var(--accent-primary, #3b82f6);
+  color: white;
+}
+
+.calc-btn.operator:hover {
+  opacity: 0.9;
+}
+
+.calc-btn.clear {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+.calc-btn.clear:hover {
+  background: rgba(239, 68, 68, 0.3);
+}
+
+.calc-btn.backspace {
+  background: rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
+}
+
+.calc-btn.backspace:hover {
+  background: rgba(245, 158, 11, 0.3);
+}
+
+.calc-btn.equals {
+  background: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+}
+
+.calc-btn.equals:hover {
+  background: rgba(16, 185, 129, 0.3);
+}
+
+.calc-btn.zero {
+  grid-column: span 2;
+}

@@ -1,10 +1,21 @@
 import { Tool, Category } from '../types'
 import JSONFormatter from './json/components/JSONFormatter'
 import CryptoTool from './crypto/components/CryptoTool'
+import Converter from './converter/components/Converter'
+import Calculator from './calculator/components/Calculator'
+import BMICalculator from './bmi/components/BMICalculator'
+import Calendar from './calendar/components/Calendar'
+import ColorPicker from './colorpicker/components/ColorPicker'
+import CurrencyConverter from './currency/components/CurrencyConverter'
+import TaxCalculator from './tax/components/TaxCalculator'
+import QRCodeTool from './qrcode/components/QRCodeTool'
+import AvatarGenerator from './avatar/components/AvatarGenerator'
+import TextDiff from './textdiff/components/TextDiff'
+import RegexTester from './regex/components/RegexTester'
+import HTMLEscape from './htmlescape/components/HTMLEscape'
+import RandomGenerator from './random/components/RandomGenerator'
 
-// 定义所有工具
 const allTools: Tool[] = [
-  // JSON 工具
   {
     id: 'json-formatter',
     name: 'JSON 格式化',
@@ -14,7 +25,15 @@ const allTools: Tool[] = [
     categoryId: 'office',
     hot: true
   },
-  // 加密工具
+  {
+    id: 'text-diff',
+    name: '文本对比',
+    description: '对比两段文本的差异，高亮显示增删改',
+    icon: '📊',
+    component: TextDiff,
+    categoryId: 'office',
+    hot: true
+  },
   {
     id: 'crypto',
     name: '加密工具',
@@ -29,7 +48,7 @@ const allTools: Tool[] = [
     name: '密码生成',
     description: '安全随机密码生成',
     icon: '🔑',
-    component: CryptoTool, // 复用 crypto 组件
+    component: CryptoTool,
     categoryId: 'security',
     hot: true
   },
@@ -52,17 +71,115 @@ const allTools: Tool[] = [
     hot: true
   },
   {
+    id: 'color',
+    name: '取色器',
+    description: '屏幕颜色拾取与转换',
+    icon: '🎨',
+    component: ColorPicker,
+    categoryId: 'dev',
+    hot: true
+  },
+  {
+    id: 'regex',
+    name: '正则测试',
+    description: '正则表达式测试与调试',
+    icon: '🔍',
+    component: RegexTester,
+    categoryId: 'dev',
+    hot: true
+  },
+  {
+    id: 'html-escape',
+    name: 'HTML转义',
+    description: 'HTML实体编码与解码',
+    icon: '📝',
+    component: HTMLEscape,
+    categoryId: 'dev',
+    hot: false
+  },
+  {
+    id: 'converter',
+    name: '单位换算',
+    description: '长度、重量、温度、面积、体积转换',
+    icon: '📏',
+    component: Converter,
+    categoryId: 'lifestyle',
+    hot: true
+  },
+  {
+    id: 'calculator',
+    name: '计算器',
+    description: '科学计算器',
+    icon: '🧮',
+    component: Calculator,
+    categoryId: 'lifestyle',
+    hot: true
+  },
+  {
+    id: 'calendar',
+    name: '日历',
+    description: '日程管理',
+    icon: '📅',
+    component: Calendar,
+    categoryId: 'lifestyle',
+    hot: false
+  },
+  {
+    id: 'bmi',
+    name: 'BMI计算',
+    description: '体重指数计算器',
+    icon: '⚖️',
+    component: BMICalculator,
+    categoryId: 'lifestyle',
+    hot: false
+  },
+  {
+    id: 'currency',
+    name: '汇率换算',
+    description: '货币汇率换算',
+    icon: '💱',
+    component: CurrencyConverter,
+    categoryId: 'lifestyle',
+    hot: false
+  },
+  {
+    id: 'tax',
+    name: '个税计算',
+    description: '工资个人所得税计算',
+    icon: '💰',
+    component: TaxCalculator,
+    categoryId: 'lifestyle',
+    hot: false
+  },
+  {
     id: 'qrcode',
     name: '二维码',
-    description: 'QR码生成',
+    description: 'QR码生成与下载',
     icon: '📱',
-    component: CryptoTool,
+    component: QRCodeTool,
     categoryId: 'creative',
     hot: true
+  },
+  {
+    id: 'avatar',
+    name: '头像生成',
+    description: '趣味头像生成器',
+    icon: '👤',
+    component: AvatarGenerator,
+    categoryId: 'creative',
+    hot: false
+  },
+  {
+    id: 'random',
+    name: '随机生成',
+    description: '随机数、字符串、列表生成',
+    icon: '🎲',
+    component: RandomGenerator,
+    categoryId: 'creative',
+    hot: false
   }
 ]
 
-// 定义分类
 export const categories: Category[] = [
   {
     id: 'office',
@@ -90,7 +207,7 @@ export const categories: Category[] = [
     name: '生活实用',
     icon: '🏠',
     color: 'orange',
-    tools: []
+    tools: allTools.filter(t => t.categoryId === 'lifestyle')
   },
   {
     id: 'creative',
@@ -98,17 +215,9 @@ export const categories: Category[] = [
     icon: '🎨',
     color: 'pink',
     tools: allTools.filter(t => t.categoryId === 'creative')
-  },
-  {
-    id: 'media',
-    name: '媒体处理',
-    icon: '🎬',
-    color: 'red',
-    tools: []
   }
 ]
 
-// 展平工具列表（保持向后兼容）
 export const tools: Tool[] = allTools
 
 export function getToolById(id: string): Tool | undefined {

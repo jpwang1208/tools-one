@@ -1,18 +1,48 @@
-.help-section {
+.help-page {
+  padding: 32px;
+  max-width: 700px;
+  margin: 0 auto;
+  height: 100%;
+  overflow-y: auto;
+  background: var(--bg-primary);
+}
+
+.help-header {
   margin-bottom: 32px;
 }
 
+.help-header h1 {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 8px 0;
+}
+
+.help-header p {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.help-section {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
 .help-section h2 {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
   color: var(--text-primary);
   margin: 0 0 16px 0;
 }
 
 .faq-list {
-  background: var(--bg-secondary);
+  background: var(--bg-primary);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   overflow: hidden;
 }
 
@@ -55,9 +85,9 @@
 }
 
 .contact-info {
-  background: var(--bg-secondary);
+  background: var(--bg-primary);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   padding: 20px;
 }
 
@@ -75,8 +105,10 @@
   background: var(--accent-primary);
   color: white;
   text-decoration: none;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   font-size: 14px;
+  font-weight: 500;
+  transition: opacity 0.2s ease;
 }
 
 .github-link:hover {
